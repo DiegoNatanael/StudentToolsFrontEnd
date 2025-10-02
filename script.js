@@ -198,7 +198,7 @@ function app() {
             }
 
             // FastAPI BACKEND ENDPOINT
-            const BACKEND_URL = 'https://studentools.onrender.com/api/generate/diagram'; 
+            const BACKEND_URL = 'https://studenttools.onrender.com/api/generate/diagram'; 
             
             this.isLoading = true;
             this.diagramOutput = '';
