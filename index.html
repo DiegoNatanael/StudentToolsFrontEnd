@@ -1,11 +1,9 @@
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Studio</title>
+    <title>Student Tools</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
@@ -98,7 +96,7 @@
                     <div class="w-8 h-8 bg-black rounded-lg flex items-center justify-center">
                         <i class="fas fa-magic text-white text-sm"></i>
                     </div>
-                    <span class="text-xl font-semibold">AI Studio</span>
+                    <span class="text-xl font-semibold">Student Tools</span>
                 </div>
                 
                 <!-- Navigation Tabs -->
@@ -233,7 +231,7 @@
                     id="api-key"
                     x-model="userApiKey" 
                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent transition-all" 
-                    placeholder="Enter your AI Studio API Key (e.g., zsk-xxxxxxxx...)"
+                    placeholder="Enter your Z.AI API Key (e.g., zsk-xxxxxxxx...)"
                 >
                 <p class="text-xs text-gray-500 mt-2">Your key is sent directly to the server for processing and is NOT stored.</p>
             </div>
@@ -312,8 +310,10 @@
             </div>
 
             <!-- Output Area -->
-            <div x-show="diagramOutput && renderSuccess" x-cloak class="bg-white border border-gray-200 rounded-lg p-6">
-                <div class="flex justify-between items-center mb-4">
+            <!-- MODIFIED: This container now shows for ANY output (success or error) -->
+            <div x-show="diagramOutput" x-cloak class="bg-white border border-gray-200 rounded-lg p-6">
+                <!-- MODIFIED: Header and download button only show on SUCCESS -->
+                <div x-show="renderSuccess" class="flex justify-between items-center mb-4">
                     <h3 class="text-lg font-semibold">Your Diagram</h3>
                     <button 
                         @click="downloadDiagram()" 
@@ -322,7 +322,12 @@
                         Download PNG
                     </button>
                 </div>
-                <div id="diagram-output" class="mermaid bg-gray-50 rounded-lg p-6" x-html="diagramOutput"></div>
+                <!-- This div will display either the SVG (on success) or the HTML error message -->
+                <div 
+                    id="diagram-output" 
+                    :class="{ 'mermaid bg-gray-50 rounded-lg p-6': renderSuccess }"
+                    x-html="diagramOutput">
+                </div>
             </div>
         </div>
 

@@ -247,7 +247,24 @@ function app() {
 
             } catch (error) {
                 console.error('Diagram Generation Error:', error);
-                this.diagramOutput = `<div class="text-red-600 p-4">Error: ${error.message}. Try rephrasing your input.</div>`;
+                // --- MODIFIED ERROR HANDLING ---
+                this.renderSuccess = false; // Ensure success is explicitly false
+                this.diagramOutput = `
+                    <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-exclamation-triangle text-red-500 mt-1"></i>
+                            </div>
+                            <div class="ml-3">
+                                <h3 class="text-sm font-medium text-red-800">Diagram Generation Failed</h3>
+                                <div class="mt-2 text-sm text-red-700">
+                                    <p><b>Error:</b> ${error.message}</p>
+                                    <p class="mt-2">This can happen if the AI returns an invalid diagram structure. Try rephrasing your request to be more specific.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
             } finally {
                 this.isLoading = false;
             }
@@ -265,7 +282,7 @@ function app() {
                 
                 if (line.trim().length > 0) {
                     processedLines.push(line);
-                    const indent = line.match(/^(\s*)/)[1];
+                    const indent = line.match(/^(\s*)/);
                     const contextualIcon = this.getContextualIcon(line);
                     processedLines.push(`${indent}  ::icon(fa ${contextualIcon})`);
                 } else {
