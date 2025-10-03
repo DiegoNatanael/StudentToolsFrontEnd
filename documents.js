@@ -4,6 +4,7 @@ let selectedStyle = "formal"; // Default style
 
 export function updateStyle(style) {
     selectedStyle = style;
+    console.log('✅ Style updated to:', style);
 }
 
 export async function generateDocument(component) {
@@ -30,8 +31,7 @@ You MUST respond with ONLY a valid JSON object, with this exact structure:
 Topic: ${component.documentInput}
 `;
         
-        // ======================= START: THE FIX =======================
-        // Add the same model cascade logic from the diagram generator.
+        // ======================= START: MODEL CASCADE =======================
         const modelsToTry = ["gemini-2.0-flash", "gemini-1.5-flash", "gpt-4o-mini"];
         let aiResponse = null;
 
@@ -54,7 +54,7 @@ Topic: ${component.documentInput}
         if (!aiResponse) {
              throw new Error("AI response was empty after trying all models.");
         }
-        // ======================= END: THE FIX =======================
+        // ======================= END: MODEL CASCADE =======================
 
         let contentJson;
         try {
@@ -65,10 +65,12 @@ Topic: ${component.documentInput}
         }
 
         // === SEND STYLE TO BACKEND ===
+        console.log('📝 Selected style before sending:', selectedStyle);
         const contentJsonWithStyle = {
             ...contentJson,
             style: selectedStyle
         };
+        console.log('📤 Sending to backend:', contentJsonWithStyle);
 
         const backendResponse = await fetch('https://studenttools.onrender.com/api/generate/docx', {
             method: 'POST',
@@ -91,12 +93,14 @@ Topic: ${component.documentInput}
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
         
-        component.documentOutput = `<div class="text-green-700 font-medium">Success! Your document '${a.download}' has started downloading.</div>`;
+        component.documentOutput = `<div class="text-green-700 font-medium">✅ Success! Your document '${a.download}' has started downloading.</div>`;
 
     } catch (error) {
-        console.error('Document generation failed:', error);
+        console.error('❌ Document generation failed:', error);
         component.documentOutput = `<div class="text-red-700 font-medium"><b>Error:</b> ${error.message}</div>`;
     } finally {
         component.isLoading = false;
     }
 }
+
+window.updateStyle = updateStyle;
