@@ -183,8 +183,6 @@ function app() {
         },
 
         // --- Diagram Generation (PUTER.JS INTEGRATION) ---
-        // --- Diagram Generation (PUTER.JS INTEGRATION) ---
-        // --- Diagram Generation (PUTER.JS INTEGRATION) ---
         async generateDiagram() {
             if (!this.diagramInput.trim()) {
                 alert('Please describe what you want to visualize.');
@@ -251,18 +249,7 @@ User request: ${this.diagramInput}
                     .join('\n')
                     .trim();
 
-                // 🔥 NEW: Fix mindmap syntax specifically
-                if (this.selectedDiagram === 'Mindmap') {
-                    // Ensure each node is on its own line
-                    mermaidCode = mermaidCode
-                        .replace(/mindmap\s+root/, 'mindmap\n  root')
-                        .replace(/\)\s+([A-Z])/g, ')\n    $1')  // After root((...))
-                        .replace(/(\w+)\s+(?=\w)/g, '$1\n  $2')  // Indent child nodes
-                        .replace(/\s+/g, ' ')  // Normalize spaces
-                        .trim();
-                }
-
-                // 🔥 NEW: Universal sanitizer (after mindmap fix)
+                // 🔥 NEW: Universal sanitizer (only removes garbage words, doesn't break syntax)
                 mermaidCode = mermaidCode
                     .replace(/\\n/g, '')  // Remove literal \n
                     .replace(/returns|types|roleStorage|occursStreams|Liquid to Gas|causesSun heat|roleStorage|occursStreams|type|return|role|occurs|causes|etc\./gi, '')
