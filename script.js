@@ -249,26 +249,24 @@ User request: ${this.diagramInput}
                     .join('\n')
                     .trim();
 
-                // 🔥 NEW: Universal sanitizer (only removes garbage words, doesn't break syntax)
+                // 🔥 NEW: Fix spaces in node names (only for flowcharts)
+                if (this.selectedDiagram === 'Flowchart') {
+                    // Insert spaces before capital letters in node names
+                    // "Evaporationfrom surface" → "Evaporation from surface"
+                    mermaidCode = mermaidCode.replace(/\[([^\]]+)\]/g, (match, nodeContent) => {
+                        // Insert space before capital letter that follows lowercase
+                        const spaced = nodeContent.replace(/([a-z])([A-Z])/g, '$1 $2');
+                        return `[${spaced}]`;
+                    });
+                }
+
+                // 🔥 NEW: Universal sanitizer (only removes garbage words)
                 mermaidCode = mermaidCode
                     .replace(/\\n/g, '')  // Remove literal \n
                     .replace(/returns|types|roleStorage|occursStreams|Liquid to Gas|causesSun heat|roleStorage|occursStreams|type|return|role|occurs|causes|etc\./gi, '')
                     .replace(/\s+/g, ' ')  // Normalize whitespace
                     .replace(/\s+$/, '')   // Remove trailing spaces
                     .trim();
-
-                // 🔥 NEW: Fix Mermaid syntax for flowcharts
-                if (this.selectedDiagram === 'Flowchart') {
-                    // Ensure each node is on its own line
-                    mermaidCode = mermaidCode
-                        .replace(/(\w+)\s*\[([^\]]+)\]\s*-->/g, '$1[$2]\n$&')
-                        .replace(/(\w+)\s*\[([^\]]+)\]\s*-->/g, '$1[$2]\n$&')
-                        .replace(/(\w+)\s*\[([^\]]+)\]\s*-->/g, '$1[$2]\n$&')
-                        .replace(/(\w+)\s*\[([^\]]+)\]/g, '$1[$2]\n')
-                        .replace(/\s*-->\s*/g, ' --> ')
-                        .replace(/\n\s*\n/g, '\n')
-                        .trim();
-                }
 
                 if (!mermaidCode) throw new Error("Empty response from AI.");
 
