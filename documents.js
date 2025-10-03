@@ -23,9 +23,34 @@ You MUST respond with ONLY a valid JSON object, with this exact structure:
 
 Topic: ${component.documentInput}
 `;
-        const aiResponse = await puter.ai.chat(prompt, { model: "gemini-1.5-flash" });
-        let contentJson;
+        
+        // ======================= START: THE FIX =======================
+        // Add the same model cascade logic from the diagram generator.
+        const modelsToTry = ["gemini-2.0-flash", "gemini-1.5-flash", "gpt-4o-mini"];
+        let aiResponse = null;
 
+        for (const model of modelsToTry) {
+            try {
+                console.log(`Attempting to generate document with model: ${model}`);
+                aiResponse = await puter.ai.chat(prompt, { model: model });
+                console.log(`✅ Success with model: ${model}`);
+                break; // Exit the loop on the first success
+            } catch (error) {
+                console.warn(`❌ Model failed: ${model}`, error.message);
+                // If this was the last model in the list, re-throw the error to be caught below.
+                if (model === modelsToTry[modelsToTry.length - 1]) {
+                    throw new Error("All AI models failed to respond. Please try again later.");
+                }
+                // Otherwise, the loop will just continue to the next model.
+            }
+        }
+        
+        if (!aiResponse) {
+             throw new Error("AI response was empty after trying all models.");
+        }
+        // ======================= END: THE FIX =======================
+
+        let contentJson;
         try {
             const cleanedResponse = aiResponse.toString().replace(/```json\n?|```/g, '').trim();
             contentJson = JSON.parse(cleanedResponse);
@@ -33,10 +58,7 @@ Topic: ${component.documentInput}
             throw new Error("AI returned invalid JSON. Please try again.");
         }
 
-        // ======================= START: THE FIX =======================
-        // Point the fetch request to your live Render backend URL.
         const backendResponse = await fetch('https://studenttools.onrender.com/api/generate/docx', {
-        // ======================= END: THE FIX =======================
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(contentJson)

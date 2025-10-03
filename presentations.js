@@ -10,7 +10,6 @@ export async function generatePresentation(component) {
     component.presentationOutput = '';
 
     try {
-        // 1. Craft a prompt to get presentation JSON from the AI
         const prompt = `
 You are an expert presentation creator. Generate content for a slide deck on the given topic.
 You MUST respond with ONLY a valid JSON object, with this exact structure:
@@ -24,11 +23,31 @@ You MUST respond with ONLY a valid JSON object, with this exact structure:
 
 Topic: ${component.presentationInput}
 `;
-        // 2. Call Puter.js AI
-        const aiResponse = await puter.ai.chat(prompt, { model: "gemini-1.5-flash" });
-        let contentJson;
+        
+        // ======================= START: THE FIX =======================
+        const modelsToTry = ["gemini-2.0-flash", "gemini-1.5-flash", "gpt-4o-mini"];
+        let aiResponse = null;
 
-        // 3. Clean and parse the AI response
+        for (const model of modelsToTry) {
+            try {
+                console.log(`Attempting to generate presentation with model: ${model}`);
+                aiResponse = await puter.ai.chat(prompt, { model: model });
+                console.log(`✅ Success with model: ${model}`);
+                break; // Exit the loop on the first success
+            } catch (error) {
+                console.warn(`❌ Model failed: ${model}`, error.message);
+                if (model === modelsToTry[modelsToTry.length - 1]) {
+                    throw new Error("All AI models failed to respond. Please try again later.");
+                }
+            }
+        }
+
+        if (!aiResponse) {
+             throw new Error("AI response was empty after trying all models.");
+        }
+        // ======================= END: THE FIX =======================
+        
+        let contentJson;
         try {
             const cleanedResponse = aiResponse.toString().replace(/```json\n?|```/g, '').trim();
             contentJson = JSON.parse(cleanedResponse);
@@ -36,8 +55,7 @@ Topic: ${component.presentationInput}
             throw new Error("AI returned invalid JSON. Please try again.");
         }
         
-        // 4. Send the JSON to our Python backend's PPTX endpoint
-        const backendResponse = await fetch('http://127.0.0.1:8000/api/generate/pptx', {
+        const backendResponse = await fetch('https://studenttools.onrender.com/api/generate/pptx', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(contentJson)
@@ -48,7 +66,6 @@ Topic: ${component.presentationInput}
             throw new Error(error.detail || `Backend error: ${backendResponse.status}`);
         }
 
-        // 5. Handle the file download
         const blob = await backendResponse.blob();
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
