@@ -1,7 +1,5 @@
 // documents.js
 
-// This function is exported so app.js can import it.
-// It accepts the Alpine component ("this") as an argument to access its data.
 export async function generateDocument(component) {
     if (!component.documentInput.trim()) {
         alert('Please enter a document topic first.');
@@ -9,10 +7,9 @@ export async function generateDocument(component) {
     }
     
     component.isLoading = true;
-    component.documentOutput = ''; // Clear previous status
+    component.documentOutput = '';
 
     try {
-        // 1. Craft the prompt to get structured JSON from the AI
         const prompt = `
 You are an expert content creator. Generate content for a document on the given topic.
 You MUST respond with ONLY a valid JSON object, with this exact structure:
@@ -26,11 +23,9 @@ You MUST respond with ONLY a valid JSON object, with this exact structure:
 
 Topic: ${component.documentInput}
 `;
-        // 2. Call Puter.js AI
         const aiResponse = await puter.ai.chat(prompt, { model: "gemini-1.5-flash" });
         let contentJson;
 
-        // 3. Clean and parse the AI response
         try {
             const cleanedResponse = aiResponse.toString().replace(/```json\n?|```/g, '').trim();
             contentJson = JSON.parse(cleanedResponse);
@@ -38,8 +33,10 @@ Topic: ${component.documentInput}
             throw new Error("AI returned invalid JSON. Please try again.");
         }
 
-        // 4. Send the JSON to our Python backend
-        const backendResponse = await fetch('http://127.0.0.1:8000/api/generate/docx', {
+        // ======================= START: THE FIX =======================
+        // Point the fetch request to your live Render backend URL.
+        const backendResponse = await fetch('https://studenttools.onrender.com/api/generate/docx', {
+        // ======================= END: THE FIX =======================
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(contentJson)
@@ -50,7 +47,6 @@ Topic: ${component.documentInput}
             throw new Error(error.detail || `Backend error: ${backendResponse.status}`);
         }
 
-        // 5. Handle the file download
         const blob = await backendResponse.blob();
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
