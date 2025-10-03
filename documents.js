@@ -1,5 +1,11 @@
 // documents.js
 
+let selectedStyle = "formal"; // Default style
+
+export function updateStyle(style) {
+    selectedStyle = style;
+}
+
 export async function generateDocument(component) {
     if (!component.documentInput.trim()) {
         alert('Please enter a document topic first.');
@@ -58,10 +64,16 @@ Topic: ${component.documentInput}
             throw new Error("AI returned invalid JSON. Please try again.");
         }
 
+        // === SEND STYLE TO BACKEND ===
+        const contentJsonWithStyle = {
+            ...contentJson,
+            style: selectedStyle
+        };
+
         const backendResponse = await fetch('https://studenttools.onrender.com/api/generate/docx', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(contentJson)
+            body: JSON.stringify(contentJsonWithStyle) // Send the object with style
         });
 
         if (!backendResponse.ok) {
