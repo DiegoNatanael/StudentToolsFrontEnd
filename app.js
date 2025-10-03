@@ -5,37 +5,34 @@ import { generateDiagram } from './diagrams.js';
 import { generateDocument } from './documents.js';
 import { generatePresentation } from './presentations.js';
 
-// Initialize Mermaid.js globally for the diagram functionality.
+// Initialize Mermaid.js globally. This is safe to do here.
 mermaid.initialize({ startOnLoad: false, theme: 'default' });
 
-// Define the main Alpine.js data function. We will attach this to the window
-// so that the 'alpine:init' event can register it.
-window.app = function () {
-    return {
+// Listen for the event that AlpineJS dispatches when it's fully initialized.
+document.addEventListener('alpine:init', () => {
+    // Register our main component with Alpine.
+    // The name 'app' matches the x-data="app" in our HTML.
+    Alpine.data('app', () => ({
         // --- Global State Management ---
-        currentSection: 'diagrams', // The default tab to show on page load.
-        isLoading: false,           // A single loading state for all generators.
+        currentSection: 'diagrams', // Default tab on page load
+        isLoading: false,
 
         // --- Documents Section State ---
         documentInput: '',
-        documentOutput: '', // Used to display success or error messages to the user.
+        documentOutput: '', // For success/error messages
 
         // --- Presentations Section State ---
         presentationInput: '',
-        presentationOutput: '', // Used for status messages.
+        presentationOutput: '', // For success/error messages
 
         // --- Diagrams Section State ---
         selectedDiagram: null,
         diagramInput: '',
         diagramOutput: '',
-        useIcons: false, // Specific setting for Mindmaps
+        useIcons: false,
         renderSuccess: false,
 
-        // --- Core Functions ---
-        // These functions act as simple wrappers that call the complex logic
-        // from the imported modules. We pass `this` so the imported functions
-        // can access and modify the component's state (e.g., set isLoading = true).
-        
+        // --- Core Functions (call imported modules) ---
         async generateDiagram() {
             await generateDiagram(this);
         },
@@ -47,7 +44,6 @@ window.app = function () {
         },
 
         // --- UI Helper Functions ---
-        // This function is kept here as it directly manipulates the DOM in the output area.
         async downloadDiagram() {
             try {
                 const svgElement = document.getElementById('diagram-output')?.querySelector('svg');
@@ -62,7 +58,7 @@ window.app = function () {
                 const link = document.createElement('a');
 
                 link.href = url;
-                link.download = 'diagram.svg'; // Downloading as SVG is more reliable and scalable.
+                link.download = 'diagram.svg';
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
@@ -75,7 +71,6 @@ window.app = function () {
         },
 
         // --- Static Data for the UI ---
-        // This data populates the diagram selection grid.
         diagramTypes: [
             { 
                 type: 'Flowchart', 
@@ -206,12 +201,5 @@ window.app = function () {
                 syntax: 'kanban'
             },
         ],
-    };
-}
-
-// This is the standard way to initialize an Alpine.js component from an external file.
-// It waits for Alpine to be ready, then registers our `app` function under the name 'app',
-// which allows `x-data="app()"` in the HTML to work correctly.
-document.addEventListener('alpine:init', () => {
-    Alpine.data('app', window.app);
+    }));
 });
