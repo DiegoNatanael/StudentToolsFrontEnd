@@ -210,7 +210,7 @@ User request: ${this.diagramInput}
 
                 // Call Puter.js (uses Gemini 1.5 Flash under the hood)
                 const response = await puter.ai.chat(prompt, {
-                    model: "google/gemini-1.5-flash"
+                    model: "google/gemini-2.5-flash"
                 });
 
                 let mermaidCode = response.toString().trim();
