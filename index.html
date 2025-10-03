@@ -1,11 +1,18 @@
 <!DOCTYPE html>
-<!-- The 'dark' class will be added/removed by app.js -->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Tools</title>
+    
+    <!-- This script MUST come BEFORE the main Tailwind script to enable class-based dark mode -->
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+      }
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
+    
     <link rel="icon" type="image/png" href="StudentTools.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
@@ -31,30 +38,45 @@
                     <span class="text-xl font-semibold">Student Tools</span>
                 </div>
                 
-                <!-- Navigation Tabs -->
+                <!-- Desktop Navigation (Hidden on mobile) -->
                 <div class="hidden sm:flex flex-1 justify-center items-center gap-8 relative">
-                    <button @click="currentSection = 'documents'" :class="currentSection === 'documents' ? 'text-black dark:text-white font-semibold' : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'" class="py-5 transition-colors relative">
-                        Documents
-                        <div x-show="currentSection === 'documents'" class="absolute bottom-0 left-0 right-0 h-0.5 bg-black dark:bg-white"></div>
-                    </button>
-                    <button @click="currentSection = 'presentations'" :class="currentSection === 'presentations' ? 'text-black dark:text-white font-semibold' : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'" class="py-5 transition-colors relative">
-                        Presentations
-                        <div x-show="currentSection === 'presentations'" class="absolute bottom-0 left-0 right-0 h-0.5 bg-black dark:bg-white"></div>
-                    </button>
-                    <button @click="currentSection = 'diagrams'" :class="currentSection === 'diagrams' ? 'text-black dark:text-white font-semibold' : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'" class="py-5 transition-colors relative">
-                        Diagrams
-                        <div x-show="currentSection === 'diagrams'" class="absolute bottom-0 left-0 right-0 h-0.5 bg-black dark:bg-white"></div>
-                    </button>
+                    <button @click="currentSection = 'documents'" :class="currentSection === 'documents' ? 'text-black dark:text-white font-semibold' : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'" class="py-5 transition-colors relative">Documents</button>
+                    <button @click="currentSection = 'presentations'" :class="currentSection === 'presentations' ? 'text-black dark:text-white font-semibold' : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'" class="py-5 transition-colors relative">Presentations</button>
+                    <button @click="currentSection = 'diagrams'" :class="currentSection === 'diagrams' ? 'text-black dark:text-white font-semibold' : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'" class="py-5 transition-colors relative">Diagrams</button>
                 </div>
 
-                <!-- Dark Mode Toggle -->
-                <div class="flex items-center">
+                <div class="flex items-center gap-4">
+                    <!-- Dark Mode Toggle -->
                     <button @click="toggleTheme()" title="Toggle dark/light mode" class="w-12 h-6 flex items-center bg-gray-300 dark:bg-gray-700 rounded-full p-1 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black dark:focus:ring-white">
                         <div :class="{ 'translate-x-6': isDarkMode }" class="w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-300 flex items-center justify-center">
                             <i :class="isDarkMode ? 'fas fa-moon text-gray-700' : 'fas fa-sun text-yellow-500'" class="text-xs"></i>
                         </div>
                     </button>
+
+                    <!-- Hamburger Button (Visible on mobile) -->
+                    <div class="sm:hidden">
+                        <button @click="isMobileMenuOpen = !isMobileMenuOpen" class="text-gray-800 dark:text-gray-200 focus:outline-none p-2">
+                            <i class="fas fa-bars text-xl" x-show="!isMobileMenuOpen"></i>
+                            <i class="fas fa-times text-xl" x-show="isMobileMenuOpen" x-cloak></i>
+                        </button>
+                    </div>
                 </div>
+            </div>
+        </div>
+
+        <!-- Mobile Menu Panel (Slides down) -->
+        <div x-show="isMobileMenuOpen" x-cloak
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 transform -translate-y-4"
+             x-transition:enter-end="opacity-100 transform translate-y-0"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100 transform translate-y-0"
+             x-transition:leave-end="opacity-0 transform -translate-y-4"
+             class="sm:hidden absolute w-full bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+            <div class="flex flex-col p-4 gap-2">
+                <button @click="currentSection = 'documents'; isMobileMenuOpen = false" class="text-left font-medium p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">Documents</button>
+                <button @click="currentSection = 'presentations'; isMobileMenuOpen = false" class="text-left font-medium p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">Presentations</button>
+                <button @click="currentSection = 'diagrams'; isMobileMenuOpen = false" class="text-left font-medium p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">Diagrams</button>
             </div>
         </div>
     </nav>
