@@ -197,9 +197,20 @@ function app() {
             this.diagramOutput = '';
             this.renderSuccess = false;
 
-            try {
-                // Build prompt for Puter.js
-                const prompt = `
+            // Try models in order of preference
+            const modelsToTry = [
+                "gemini-2.0-flash",      // Newest
+                "gemini-1.5-flash",      // Original
+                "gpt-4o-mini",           // Fallback
+                "claude-sonnet-4"        // Last resort
+            ];
+
+            let response = null;
+            let usedModel = null;
+
+            for (const model of modelsToTry) {
+                try {
+                    const prompt = `
 You are a Mermaid.js expert. Generate ONLY valid Mermaid ${this.selectedDiagram.toLowerCase()} code.
 Start with the correct syntax for ${this.selectedDiagram}.
 Use \\n for line breaks in nodes. Keep text concise.
@@ -208,11 +219,21 @@ Output ONLY raw Mermaid code. No explanations, no markdown.
 User request: ${this.diagramInput}
 `;
 
-                // Call Puter.js (uses Gemini 1.5 Flash under the hood)
-                const response = await puter.ai.chat(prompt, {
-                    model: "google/gemini-2.5-flash"
-                });
+                    response = await puter.ai.chat(prompt, { model: model });
+                    usedModel = model;
+                    console.log(`✅ Used model: ${model}`);
+                    break; // Success - exit loop
+                } catch (error) {
+                    console.warn(`❌ Model failed: ${model}`, error.message);
+                    if (model === modelsToTry[modelsToTry.length - 1]) {
+                        // This was the last model
+                        throw error;
+                    }
+                    // Try next model
+                }
+            }
 
+            try {
                 let mermaidCode = response.toString().trim();
                 
                 // Clean common AI artifacts
@@ -238,7 +259,7 @@ User request: ${this.diagramInput}
                 this.renderSuccess = true;
 
             } catch (error) {
-                console.error('Puter.js Error:', error);
+                console.error('Mermaid rendering error:', error);
                 this.renderSuccess = false;
                 this.diagramOutput = `
                     <div class="bg-red-50 border border-red-200 rounded-lg p-4">
