@@ -257,6 +257,19 @@ User request: ${this.diagramInput}
                     .replace(/\s+$/, '')   // Remove trailing spaces
                     .trim();
 
+                // 🔥 NEW: Fix Mermaid syntax for flowcharts
+                if (this.selectedDiagram === 'Flowchart') {
+                    // Ensure each node is on its own line
+                    mermaidCode = mermaidCode
+                        .replace(/(\w+)\s*\[([^\]]+)\]\s*-->/g, '$1[$2]\n$&')
+                        .replace(/(\w+)\s*\[([^\]]+)\]\s*-->/g, '$1[$2]\n$&')
+                        .replace(/(\w+)\s*\[([^\]]+)\]\s*-->/g, '$1[$2]\n$&')
+                        .replace(/(\w+)\s*\[([^\]]+)\]/g, '$1[$2]\n')
+                        .replace(/\s*-->\s*/g, ' --> ')
+                        .replace(/\n\s*\n/g, '\n')
+                        .trim();
+                }
+
                 if (!mermaidCode) throw new Error("Empty response from AI.");
 
                 console.log('Mermaid Code:', mermaidCode);
