@@ -210,14 +210,33 @@ function app() {
 
             for (const model of modelsToTry) {
                 try {
+                    // =================================================================
+                    // START OF BUG FIX: Replaced the old ambiguous prompt with a new,
+                    // explicit prompt that provides a clear example (few-shot).
+                    // This ensures consistent output across all AI models.
+                    // =================================================================
                     const prompt = `
-You are a Mermaid.js expert. Generate ONLY valid Mermaid ${this.selectedDiagram.toLowerCase()} code.
-Start with the correct syntax for ${this.selectedDiagram}.
-Use \\n for line breaks in nodes. Keep text concise.
-Output ONLY raw Mermaid code. No explanations, no markdown.
+You are a Mermaid.js expert. Your task is to generate Mermaid.js code for a ${this.selectedDiagram.name}.
+- The very first line of your output MUST be \`${this.selectedDiagram.syntax}\`. Do NOT use any other diagram type.
+- For mind maps, use indentation to show hierarchy.
+- Use \\n for line breaks in nodes if needed, but keep text concise.
+- Output ONLY the raw Mermaid code. Do not include explanations, comments, or markdown fences like \`\`\`mermaid.
+
+Here is an example of a simple mind map structure:
+mindmap
+  root((Root Topic))
+    Branch A
+      Sub-branch A1
+      Sub-branch A2
+    Branch B
+
+Now, generate the code for the following user request.
 
 User request: ${this.diagramInput}
 `;
+                    // =================================================================
+                    // END OF BUG FIX
+                    // =================================================================
 
                     response = await puter.ai.chat(prompt, { model: model });
                     usedModel = model;

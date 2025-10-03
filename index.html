@@ -229,8 +229,8 @@
                 <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                     <template x-for="diagram in diagramTypes" :key="diagram.type">
                         <button 
-                            @click="selectedDiagram = diagram.type" 
-                            :class="selectedDiagram === diagram.type ? 'active' : ''"
+                            @click="selectedDiagram = diagram" 
+                            :class="{ 'active': selectedDiagram && selectedDiagram.type === diagram.type }"
                             class="diagram-card p-4 border border-gray-300 rounded-lg text-center transition-all text-left">
                             <i :class="diagram.icon" class="text-2xl mb-2 block text-center"></i>
                             <div class="text-sm font-semibold mb-1" x-text="diagram.name"></div>
@@ -241,8 +241,9 @@
                 
                 <!-- Selected Diagram Info -->
                 <div x-show="selectedDiagram" x-cloak class="mt-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                    <!-- This template now correctly checks against the selectedDiagram object -->
                     <template x-for="diagram in diagramTypes" :key="diagram.type">
-                        <div x-show="selectedDiagram === diagram.type">
+                        <div x-show="selectedDiagram && selectedDiagram.type === diagram.type">
                             <div class="flex items-start gap-3 mb-3">
                                 <i :class="diagram.icon" class="text-3xl mt-1"></i>
                                 <div>
@@ -262,7 +263,7 @@
             <!-- Input Area -->
             <div class="bg-white border border-gray-200 rounded-lg p-6 mb-6">
                 <label class="block text-sm font-medium text-gray-700 mb-3">
-                    <span x-text="selectedDiagram ? 'Describe Your ' + selectedDiagram : 'Select a diagram type above'"></span>
+                    <span x-text="selectedDiagram ? 'Describe Your ' + selectedDiagram.name : 'Select a diagram type above'"></span>
                 </label>
                 <textarea 
                     x-model="diagramInput" 
@@ -273,7 +274,7 @@
                 </textarea>
                 
                 <!-- Icon Toggle for Mindmaps -->
-                <div x-show="selectedDiagram === 'Mindmap'" class="mt-4 flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                <div x-show="selectedDiagram && selectedDiagram.type === 'Mindmap'" class="mt-4 flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
                     <label class="flex items-center gap-3 cursor-pointer">
                         <div class="relative">
                             <input type="checkbox" x-model="useIcons" class="sr-only peer">
