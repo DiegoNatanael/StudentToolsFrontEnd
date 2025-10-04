@@ -3,9 +3,10 @@
 import Alpine from 'alpinejs';
 import { generateDiagram } from './diagrams.js';
 import { generateDocument, updateStyle } from './documents.js';
-import { generatePresentation } from './presentations.js';
+import { generatePresentation, updatePresentationStyle } from './presentations.js';
 
 window.updateStyle = updateStyle;
+window.updatePresentationStyle = updatePresentationStyle;
 
 // Wait until the entire HTML document is loaded and ready
 document.addEventListener('DOMContentLoaded', () => {
@@ -28,6 +29,8 @@ document.addEventListener('DOMContentLoaded', () => {
         useIcons: false,
         renderSuccess: false,
         documentLength: 1,
+        presentationLength: 1,
+        presentationStyle: 'formal',
 
         init() {},
 
