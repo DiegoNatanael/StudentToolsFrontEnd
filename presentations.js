@@ -30,30 +30,36 @@ export async function generatePresentation(component) {
         const modelsToTry = ["gemini-2.0-flash", "gemini-1.5-flash", "gpt-4o-mini"];
         
         const prompt = `
-You are creating a professional presentation. Generate ${slidesConfig.slides} slides for a presentation.
+You are creating a professional presentation with RICH, DETAILED content. Generate ${slidesConfig.slides} slides.
 
-SLIDE STRUCTURE:
-- First slide: Title slide with just the main title
-- Slides 2-${slidesConfig.slides - 1}: Content slides with titles and 3-5 concise bullet points each
-- Last slide: "Conclusion" or "Key Takeaways" summarizing main points
+CRITICAL REQUIREMENTS:
+- Each content slide MUST have 5-7 bullet points (not 3!)
+- Bullet points should be SPECIFIC and INFORMATIVE (12-20 words each)
+- Include data, examples, statistics, or concrete details
+- Vary content types: definitions, processes, comparisons, benefits, challenges, examples
+- Make every slide valuable - no generic filler content
 
-CONTENT GUIDELINES:
-- Keep bullet points SHORT and IMPACTFUL (max 15 words per point)
-- Use action-oriented language
-- Vary slide types: some with facts, some with processes, some with comparisons
-- Make it engaging and visual-friendly
+SLIDE BREAKDOWN:
+- Slide 1: Title slide (just title)
+- Slides 2-${slidesConfig.slides - 1}: Dense content slides with specific information
+- Last slide: Key takeaways with actionable insights
 
-JSON format:
+CONTENT QUALITY:
+- Use specific terminology and detailed explanations
+- Include quantifiable information where relevant
+- Provide context and real-world applications
+- Each bullet should teach something concrete
+
+JSON format (MUST be valid):
 {
   "title": "Presentation Title",
   "slides": [
-    { "title": "Slide Title", "content": ["Bullet 1", "Bullet 2", "Bullet 3"] }
+    { "title": "Slide Title", "content": ["Detailed point 1...", "Detailed point 2...", "Point 3...", "Point 4...", "Point 5..."] }
   ]
 }
 
 Topic: ${component.presentationInput}
-Style: ${selectedPresentationStyle}
-Generate exactly ${slidesConfig.slides} slides.
+Generate ${slidesConfig.slides} information-rich slides.
 `;
 
         console.log(`📊 Generating ${slidesConfig.description} presentation`);
