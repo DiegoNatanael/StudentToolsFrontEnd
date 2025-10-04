@@ -2,8 +2,10 @@
 
 import Alpine from 'alpinejs';
 import { generateDiagram } from './diagrams.js';
-import { generateDocument } from './documents.js';
+import { generateDocument, updateStyle } from './documents.js';
 import { generatePresentation } from './presentations.js';
+
+window.updateStyle = updateStyle;
 
 // Wait until the entire HTML document is loaded and ready
 document.addEventListener('DOMContentLoaded', () => {
