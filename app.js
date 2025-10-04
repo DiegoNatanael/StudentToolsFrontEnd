@@ -27,6 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
         diagramOutput: '',
         useIcons: false,
         renderSuccess: false,
+        documentLength: 1,
 
         init() {},
 
