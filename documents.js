@@ -45,26 +45,39 @@ export async function generateDocument(component) {
             }
 
             const prompt = `
-You are an expert content creator. Generate ${callNum === 1 ? 'the beginning of' : 'continuation of'} a comprehensive ${lengthConfig.pages}-page document on the given topic.
+You are a student researcher writing an investigative report. Generate ${callNum === 1 ? 'the beginning of' : 'continuation of'} a ${lengthConfig.pages}-page research document.
 
-CRITICAL REQUIREMENTS:
-- Generate exactly ${sectionsPerCall} DISTINCT sections
-- Each section MUST have 3-5 paragraphs minimum (150-250 words per paragraph)
-- Use VARIED section structures: some with subsections, some with examples, some with analysis
-- DO NOT follow a repetitive pattern (avoid: concept → definition → concept → definition)
-- Mix different content types: explanations, examples, case studies, analysis, implications, comparisons
+WRITING STYLE:
+- Write in flowing, connected prose with smooth transitions
+- NEVER use bullet points - only narrative paragraphs
+- Blend analysis, examples, and evidence naturally
+- Use academic phrases: "Research indicates...", "Evidence suggests...", "This demonstrates..."
+- Connect ideas with transitions: "Furthermore...", "However...", "In light of this..."
+
+STRUCTURE:
+- Generate ${sectionsPerCall} major sections with VARIED lengths and structures
+- Some sections should be brief (2-3 paragraphs), others extensive (6-8 paragraphs)
+- Paragraph lengths should vary naturally: some short (100 words), others detailed (300+ words)
+- Mix different section types: some analytical, some descriptive, some comparative
+- Break monotony - no two sections should follow the same pattern
 ${contextPrompt}
 
-You MUST respond with ONLY a valid JSON object:
+DEPTH & QUALITY:
+- Provide comprehensive coverage with specific details
+- Include concrete examples and real-world applications
+- Discuss implications, significance, and broader context
+- Where relevant, acknowledge different perspectives or complexities
+
+JSON format:
 {
-  "title": "Main Document Title",
+  "title": "Document Title",
   "sections": [
-    { "header": "Section Title", "paragraphs": ["Long paragraph 1 (150-250 words).", "Long paragraph 2.", "Long paragraph 3."] }
+    { "header": "Section Title", "paragraphs": ["Paragraph 1...", "Paragraph 2..."] }
   ]
 }
 
 Topic: ${component.documentInput}
-Call ${callNum} of ${lengthConfig.calls} - Generate sections ${(callNum-1)*sectionsPerCall + 1} to ${callNum*sectionsPerCall}
+Part ${callNum} of ${lengthConfig.calls}
 `;
 
             console.log(`📝 Generating part ${callNum}/${lengthConfig.calls}`);
