@@ -1,146 +1,170 @@
 // app.js
 
-import Alpine from 'alpinejs';
-import { generateDiagram } from './diagrams.js';
-import { generateDocument, updateStyle } from './documents.js';
-import { generatePresentation, updatePresentationStyle } from './presentations.js';
+const API_BASE = "http://127.0.0.1:8000/api";
 
-window.updateStyle = updateStyle;
-window.updatePresentationStyle = updatePresentationStyle;
+// --- UI Elements ---
+const navButtons = document.querySelectorAll('.nav-btn');
+const sections = document.querySelectorAll('.hero-section');
+const logOverlay = document.getElementById('statusLog');
+const logMessages = document.getElementById('logMessages');
 
-// Wait until the entire HTML document is loaded and ready
-document.addEventListener('DOMContentLoaded', () => {
-    // Now it's safe to initialize mermaid
-    mermaid.initialize({ startOnLoad: false, theme: 'dark' });
+// --- State Management ---
+let currentSection = 'docs';
+let currentDiagType = 'Flowchart';
 
-    Alpine.data('app', () => ({
-        // --- State Management ---
-        isDarkMode: true, // Default value, will be updated by initTheme
-        isMobileMenuOpen: false,
-        currentSection: 'diagrams',
-        isLoading: false,
-        documentInput: '',
-        documentOutput: '',
-        presentationInput: '',
-        presentationOutput: '',
-        selectedDiagram: null,
-        diagramInput: '',
-        diagramOutput: '',
-        useIcons: false,
-        renderSuccess: false,
-        documentLength: 1,
-        presentationLength: 1,
-        presentationStyle: 'formal',
+// --- Navigation ---
+navButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+        const target = btn.dataset.section;
+        navButtons.forEach(b => b.classList.remove('active'));
+        sections.forEach(s => s.classList.remove('active'));
 
-        init() {},
-
-        // --- Theme Management ---
-        initTheme() {
-            const savedTheme = localStorage.getItem('theme');
-            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            
-            // Set initial state
-            if (savedTheme === 'dark' || (savedTheme === null && prefersDark)) {
-                this.isDarkMode = true;
-                document.documentElement.classList.add('dark');
-            } else {
-                this.isDarkMode = false;
-                document.documentElement.classList.remove('dark');
-            }
-            
-            // Initialize Mermaid with correct theme
-            mermaid.initialize({ 
-                startOnLoad: false, 
-                theme: this.isDarkMode ? 'dark' : 'default' 
-            });
-        },
-
-        toggleTheme() {
-            this.isDarkMode = !this.isDarkMode;
-            
-            if (this.isDarkMode) {
-                localStorage.setItem('theme', 'dark');
-                document.documentElement.classList.add('dark');
-            } else {
-                localStorage.setItem('theme', 'light');
-                document.documentElement.classList.remove('dark');
-            }
-            
-            // Update Mermaid theme
-            mermaid.initialize({ 
-                startOnLoad: false, 
-                theme: this.isDarkMode ? 'dark' : 'default' 
-            });
-            
-            // Re-render diagram if one exists
-            if (this.diagramOutput && this.diagramInput) {
-                setTimeout(() => this.generateDiagram(), 50);
-            }
-        },
-
-        // --- Core Functions ---
-        async generateDiagram() { await generateDiagram(this); },
-        async generateDocument() { await generateDocument(this); },
-        async generatePresentation() { await generatePresentation(this); },
-
-        // --- PNG Download Function ---
-        async downloadDiagram() {
-            try {
-                const svgElement = document.getElementById('diagram-output')?.querySelector('svg');
-                if (!svgElement) {
-                    alert('No diagram to download');
-                    return;
-                }
-                const svgString = new XMLSerializer().serializeToString(svgElement);
-                const dataUrl = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgString)));
-                const img = new Image();
-                img.onload = () => {
-                    const bbox = svgElement.getBBox();
-                    const PADDING = 60;
-                    const canvas = document.createElement('canvas');
-                    canvas.width = bbox.width + PADDING;
-                    canvas.height = bbox.height + PADDING;
-                    const ctx = canvas.getContext('2d');
-                    ctx.fillStyle = this.isDarkMode ? '#111827' : '#FFFFFF'; // Use appropriate background color
-                    ctx.fillRect(0, 0, canvas.width, canvas.height);
-                    ctx.drawImage(img, -bbox.x + (PADDING / 2), -bbox.y + (PADDING / 2));
-                    canvas.toBlob((blob) => {
-                        const link = document.createElement('a');
-                        link.download = 'diagram.png';
-                        link.href = URL.createObjectURL(blob);
-                        document.body.appendChild(link);
-                        link.click();
-                        document.body.removeChild(link);
-                        URL.revokeObjectURL(link.href);
-                    }, 'image/png');
-                };
-                img.onerror = () => {
-                    alert("Download failed: Could not load the diagram image for conversion.");
-                };
-                img.src = dataUrl;
-            } catch (error) {
-                console.error('Download failed:', error);
-                alert(`Download failed: ${error.message}`);
-            }
-        },
-
-        // --- Static Data ---
-        diagramTypes: [
-            { type: 'Flowchart', name: 'Flowchart', icon: 'fas fa-sitemap', description: 'Show processes & flows', example: 'Process workflow, decision trees', syntax: 'flowchart TD' },
-            { type: 'Sequence Diagram', name: 'Sequence', icon: 'fas fa-stream', description: 'Show interactions over time', example: 'API calls, user authentication', syntax: 'sequenceDiagram' },
-            { type: 'Class Diagram', name: 'Class', icon: 'fas fa-cube', description: 'Show class structures', example: 'Software architecture, OOP', syntax: 'classDiagram' },
-            { type: 'State Diagram', name: 'State', icon: 'fas fa-circle-notch', description: 'Show states & transitions', example: 'User sessions, order status', syntax: 'stateDiagram-v2' },
-            { type: 'ER Diagram', name: 'ER Diagram', icon: 'fas fa-database', description: 'Show database relationships', example: 'Database schema, data models', syntax: 'erDiagram' },
-            { type: 'User Journey', name: 'User Journey', icon: 'fas fa-route', description: 'Map user experience', example: 'Customer journey, onboarding', syntax: 'journey' },
-            { type: 'Gantt', name: 'Gantt', icon: 'fas fa-tasks', description: 'Show project timeline', example: 'Project schedule, planning', syntax: 'gantt' },
-            { type: 'Pie Chart', name: 'Pie Chart', icon: 'fas fa-chart-pie', description: 'Show proportional data', example: 'Market share, budgets', syntax: 'pie' },
-            { type: 'Quadrant Chart', name: 'Quadrant', icon: 'fas fa-th', description: 'Plot items in 4 quadrants', example: 'Priority matrix, risk assessment', syntax: 'quadrantChart' },
-            { type: 'Mindmap', name: 'Mind Map', icon: 'fas fa-brain', description: 'Organize ideas hierarchically', example: 'Brainstorming, concepts', syntax: 'mindmap' },
-            { type: 'Timeline', name: 'Timeline', icon: 'fas fa-history', description: 'Show chronological events', example: 'Project milestones, history', syntax: 'timeline' },
-            { type: 'GitGraph', name: 'Git Graph', icon: 'fab fa-git-alt', description: 'Show git branch history', example: 'Git commits, branch merges', syntax: 'gitGraph' },
-        ],
-    }));
-
-    window.Alpine = Alpine;
-    Alpine.start();
+        btn.classList.add('active');
+        document.getElementById(target).classList.add('active');
+        currentSection = target;
+    });
 });
+
+// --- Diagram Picker Logic ---
+const diagTypeCards = document.querySelectorAll('.diag-type-card');
+diagTypeCards.forEach(card => {
+    card.addEventListener('click', () => {
+        diagTypeCards.forEach(c => c.classList.remove('active'));
+        card.classList.add('active');
+        currentDiagType = card.dataset.type;
+    });
+});
+
+// --- Logger System ---
+function logStatus(message, isNew = false) {
+    if (isNew) logMessages.innerHTML = "";
+    logOverlay.classList.remove('hidden');
+    const msgDiv = document.createElement('div');
+    msgDiv.className = 'msg';
+    msgDiv.textContent = `> ${message}`;
+    logMessages.appendChild(msgDiv);
+    logMessages.scrollTop = logMessages.scrollHeight;
+}
+
+function hideLog() {
+    setTimeout(() => {
+        logOverlay.classList.add('hidden');
+    }, 2000);
+}
+
+// --- API Helpers ---
+async function generateGeneric(endpoint, body, onSuccess) {
+    try {
+        const response = await fetch(`${API_BASE}${endpoint}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+
+        if (!response.ok) throw new Error(await response.text());
+
+        return response;
+    } catch (error) {
+        logStatus(`Error: ${error.message}`);
+        console.error(error);
+        return null;
+    }
+}
+
+// --- Specific Generators ---
+
+// DOCUMENT GENERATION
+document.getElementById('genDocBtn').addEventListener('click', async () => {
+    const topic = document.getElementById('docInput').value.trim();
+
+    if (!topic) return alert("Please enter a topic");
+
+    logStatus("Architecting professional report with LaTeX...", true);
+
+    // Step 1: Generate Plan
+    const planResponse = await generateGeneric('/generate/plan', { topic, type: "document" });
+    if (!planResponse) return;
+
+    const plan = await planResponse.json();
+    logStatus("Deep content structure established. Rendering PDF...");
+
+    // Step 2: Generate PDF
+    const pdfResponse = await generateGeneric('/generate/pdf', plan);
+
+    if (pdfResponse) {
+        const blob = await pdfResponse.blob();
+        downloadBlob(blob, `${plan.title.replace(/ /g, '_')}.pdf`);
+        logStatus("Success! Your professional academic paper is ready.");
+        hideLog();
+    }
+});
+
+/*
+// PRESENTATION GENERATION
+document.getElementById('genPptBtn').addEventListener('click', async () => {
+    const topic = document.getElementById('pptInput').value.trim();
+    if (!topic) return alert("Please enter a topic");
+
+    logStatus("Brainstorming slides with Llama 3.1 405b...", true);
+
+    const planResponse = await generateGeneric('/generate/plan', { topic, type: "presentation" });
+    if (!planResponse) return;
+
+    const plan = await planResponse.json();
+    logStatus(`Planning ${plan.slides.length} slides. Formatting PPTX...`);
+
+    const pptResponse = await generateGeneric('/generate/pptx', {
+        title: plan.title,
+        slides: plan.slides
+    });
+
+    if (pptResponse) {
+        const blob = await pptResponse.blob();
+        downloadBlob(blob, `${plan.title.replace(/ /g, '_')}.pptx`);
+        logStatus("Presentation generated successfully!");
+        hideLog();
+    }
+});
+*/
+
+// DIAGRAM GENERATION
+document.getElementById('genDiagBtn').addEventListener('click', async () => {
+    const topic = document.getElementById('diagInput').value.trim();
+    const type = currentDiagType;
+    if (!topic) return alert("Please enter a topic");
+
+    const container = document.getElementById('mermaidOutput');
+    container.innerHTML = '<div class="loader"></div>';
+    logStatus(`Architecting ${type} diagram...`, true);
+
+    const response = await generateGeneric('/generate/diagram', { topic, type });
+    if (response) {
+        const data = await response.json();
+        logStatus("Diagram logic established. Rendering...");
+
+        container.removeAttribute('data-processed');
+        container.innerHTML = data.code;
+        try {
+            await mermaid.run({ nodes: [container] });
+            logStatus("Visualization complete.");
+        } catch (e) {
+            container.innerHTML = '<div class="text-red-500">Render Error. Try clarifying your description.</div>';
+        }
+        hideLog();
+    }
+});
+
+// --- Utility Functions ---
+function downloadBlob(blob, filename) {
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.style.display = 'none';
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+}
+
+// Initialize Mermaid
+mermaid.initialize({ startOnLoad: false, theme: 'dark' });

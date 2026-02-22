@@ -4,298 +4,162 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Tools</title>
-
-    <script src="https://cdn.tailwindcss.com?plugins=forms,typography,aspect-ratio"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class'
-        }
-    </script>
-
+    <title>Student Tools V2 | Pro Edition</title>
     <link rel="icon" type="image/png" href="StudentTools.png">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;800&display=swap"
+        rel="stylesheet">
+
+    <!-- Icons & Mermaiid -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-    <!-- Link to our external stylesheet -->
-    <link rel="stylesheet" href="styles.css">
-
-    <script src="https://js.puter.com/v2/"></script>
     <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
-    <script type="importmap">
-    { "imports": { "alpinejs": "https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/module.esm.js" } }
-    </script>
+
+    <link rel="stylesheet" href="styles.css">
 </head>
 
-<body x-data="app()" x-init="initTheme()"
-    class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 antialiased transition-colors duration-300">
+<body class="dark-mode">
+    <!-- Animated background -->
+    <div class="bg-vignette"></div>
+    <div class="blob-gradient blob-1"></div>
+    <div class="blob-gradient blob-2"></div>
+    <div class="blob-gradient blob-3"></div>
 
-    <!-- Top Navigation Bar -->
-    <nav
-        class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50 transition-colors duration-300">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
-                <!-- Logo -->
-                <div class="flex items-center gap-3">
-                    <img src="StudentTools.png" alt="Logo" class="w-12 h-12">
-                    <span class="text-xl font-semibold">Student Tools</span>
-                </div>
-
-                <!-- Desktop Navigation (Hidden on mobile) -->
-                <div class="hidden sm:flex flex-1 justify-center items-center gap-8 relative">
-                    <button @click="currentSection = 'documents'"
-                        :class="currentSection === 'documents' ? 'text-black dark:text-white font-semibold' : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'"
-                        class="py-5 transition-colors relative">Documents</button>
-                    <button @click="currentSection = 'presentations'"
-                        :class="currentSection === 'presentations' ? 'text-black dark:text-white font-semibold' : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'"
-                        class="py-5 transition-colors relative">Presentations</button>
-                    <button @click="currentSection = 'diagrams'"
-                        :class="currentSection === 'diagrams' ? 'text-black dark:text-white font-semibold' : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'"
-                        class="py-5 transition-colors relative">Diagrams</button>
-                </div>
-
-                <div class="flex items-center gap-4">
-                    <!-- Dark Mode Toggle -->
-                    <button @click="toggleTheme()" title="Toggle dark/light mode"
-                        class="w-12 h-6 flex items-center bg-gray-300 dark:bg-gray-700 rounded-full p-1 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black dark:focus:ring-white">
-                        <div :class="{ 'translate-x-6': isDarkMode }"
-                            class="w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-300 flex items-center justify-center">
-                            <i :class="isDarkMode ? 'fas fa-moon text-gray-700' : 'fas fa-sun text-yellow-500'"
-                                class="text-xs"></i>
-                        </div>
-                    </button>
-
-                    <!-- Hamburger Button (Visible on mobile) -->
-                    <div class="sm:hidden">
-                        <button @click="isMobileMenuOpen = !isMobileMenuOpen"
-                            class="text-gray-800 dark:text-gray-200 focus:outline-none p-2">
-                            <i class="fas fa-bars text-xl" x-show="!isMobileMenuOpen"></i>
-                            <i class="fas fa-times text-xl" x-show="isMobileMenuOpen" x-cloak></i>
-                        </button>
-                    </div>
-                </div>
+    <nav class="glass-nav">
+        <div class="nav-content">
+            <div class="logo">
+                <img src="StudentTools.png" alt="Logo">
+                <span>StudentTools</span>
             </div>
-        </div>
-
-        <!-- Mobile Menu Panel (Slides down) -->
-        <div x-show="isMobileMenuOpen" x-cloak x-transition:enter="transition ease-out duration-200"
-            x-transition:enter-start="opacity-0 transform -translate-y-4"
-            x-transition:enter-end="opacity-100 transform translate-y-0"
-            x-transition:leave="transition ease-in duration-150"
-            x-transition:leave-start="opacity-100 transform translate-y-0"
-            x-transition:leave-end="opacity-0 transform -translate-y-4"
-            class="sm:hidden absolute w-full bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-            <div class="flex flex-col p-4 gap-2">
-                <button @click="currentSection = 'documents'; isMobileMenuOpen = false"
-                    class="text-left font-medium p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">Documents</button>
-                <button @click="currentSection = 'presentations'; isMobileMenuOpen = false"
-                    class="text-left font-medium p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">Presentations</button>
-                <button @click="currentSection = 'diagrams'; isMobileMenuOpen = false"
-                    class="text-left font-medium p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">Diagrams</button>
+            <div class="nav-links">
+                <button class="nav-btn active" data-section="docs">Documents</button>
+                <!-- <button class="nav-btn" data-section="slides">Presentations</button> -->
+                <button class="nav-btn" data-section="diagrams">Diagrams</button>
             </div>
         </div>
     </nav>
 
-    <!-- Main Content Container -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <!-- DOCUMENTS SECTION -->
-        <div x-show="currentSection === 'documents'" class="page-section">
-            <div class="max-w-4xl mx-auto">
-                <div class="mb-8">
-                    <h1 class="text-4xl font-bold mb-2">Create Documents</h1>
-                    <p class="text-gray-600 dark:text-gray-400">Generate well-structured DOCX files from any topic</p>
+    <main class="container">
+        <!-- DOCS SECTION -->
+        <section id="docs" class="hero-section active">
+            <div class="hero-text">
+                <h1>Smart Documents</h1>
+                <p>NIM-powered document generation with professional typography.</p>
+            </div>
+
+            <div class="glass-card">
+                <div class="input-group">
+                    <label>Document Topic</label>
+                    <textarea id="docInput"
+                        placeholder="What should we write about today? e.g. 'The impact of quantum computing on modern cryptography'"></textarea>
                 </div>
-                <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 mb-6">
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Document
-                        Topic</label>
-                    <!-- ADDED: Style Selector -->
-                    <div class="mb-4">
-                        <label for="documentStyle"
-                            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Document Style
-                        </label>
-                        <select id="documentStyle" x-on:change="window.updateStyle($event.target.value)"
-                            class="w-full px-4 py-2.5 bg-white dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 transition-colors cursor-pointer hover:border-gray-400 dark:hover:border-gray-500">
-                            <option value="formal">📋 Formal - Professional business documents</option>
-                            <option value="modern">✨ Modern - Clean and contemporary style</option>
-                            <option value="academic">🎓 Academic - Scholarly papers and research</option>
+
+                <div class="options-grid">
+                    <div class="input-group">
+                        <label>Style</label>
+                        <select id="docStyle">
+                            <option value="formal">📋 Formal Business</option>
+                            <option value="academic">🎓 Academic Scholarly</option>
+                            <option value="modern">✨ Modern Minimalist</option>
                         </select>
                     </div>
-                    <div class="mb-4">
-                        <label for="documentLength"
-                            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Document Length: <span x-text="documentLength" class="font-bold"></span>
-                        </label>
-                        <input type="range" id="documentLength" x-model="documentLength" min="1" max="3" step="1"
-                            value="1"
-                            class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700">
-                        <div class="flex justify-between text-xs text-gray-600 dark:text-gray-400 mt-1">
-                            <span>Short (1-5 pages)</span>
-                            <span>Medium (5-10 pages)</span>
-                            <span>Long (10-20 pages)</span>
-                        </div>
-                    </div>
-                    <!-- END OF ADDED: Style Selector -->
-                    <textarea x-model="documentInput" rows="8"
-                        class="w-full px-4 py-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent resize-none transition-all dark:placeholder-gray-400"
-                        placeholder="Enter your document topic or outline..."></textarea>
-                    <button @click="generateDocument()" :disabled="isLoading"
-                        class="mt-4 w-full bg-black dark:bg-white dark:text-black dark:hover:bg-gray-200 text-white font-medium py-3 px-6 rounded-lg hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all hover-lift">
-                        <span x-show="!isLoading">Generate Document</span>
-                        <span x-show="isLoading" class="flex items-center justify-center gap-2">
-                            <div class="loader" :class="isDarkMode ? 'loader-dark' : 'loader-light'"
-                                style="width: 16px; height: 16px; border-width: 2px;"></div>Generating...
-                        </span>
-                    </button>
-                </div>
-                <div x-show="documentOutput" x-cloak
-                    class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
-                    <div class="prose dark:prose-invert max-w-none" x-html="documentOutput"></div>
-                </div>
-            </div>
-        </div>
-        <!-- PRESENTATIONS SECTION -->
-        <div x-show="currentSection === 'presentations'" class="page-section">
-            <div class="max-w-4xl mx-auto">
-                <div class="mb-8">
-                    <h1 class="text-4xl font-bold mb-2">Create Presentations</h1>
-                    <p class="text-gray-600 dark:text-gray-400">Generate professional PPTX slides from any topic</p>
                 </div>
 
-                <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 mb-6">
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Presentation
-                        Topic</label>
-                    <textarea x-model="presentationInput" rows="8"
-                        class="w-full px-4 py-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent resize-none transition-all dark:placeholder-gray-400"
-                        placeholder="Enter your presentation topic or outline..."></textarea>
-
-                    <!-- Presentation Style Selector -->
-                    <div class="mt-4 mb-4">
-                        <label for="presentationStyle"
-                            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Presentation Style
-                        </label>
-                        <select id="presentationStyle" x-on:change="window.updatePresentationStyle($event.target.value)"
-                            class="w-full px-4 py-2.5 bg-white dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 transition-colors cursor-pointer hover:border-gray-400 dark:hover:border-gray-500">
-                            <option value="formal">🎯 Formal - Professional black & white</option>
-                            <option value="business">💼 Business - Clean corporate design</option>
-                            <option value="creative">🎨 Creative - Colorful with visual elements</option>
-                        </select>
-                    </div>
-
-                    <!-- Presentation Length Slider -->
-                    <div class="mb-4">
-                        <label for="presentationLength"
-                            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Presentation Length: <span
-                                x-text="['Short (5-8 slides)', 'Medium (10-15 slides)', 'Long (18-25 slides)'][presentationLength - 1]"
-                                class="font-bold"></span>
-                        </label>
-                        <input type="range" id="presentationLength" x-model="presentationLength" min="1" max="3"
-                            step="1" value="1"
-                            class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700">
-                        <div class="flex justify-between text-xs text-gray-600 dark:text-gray-400 mt-1">
-                            <span>Short</span>
-                            <span>Medium</span>
-                            <span>Long</span>
-                        </div>
-                    </div>
-
-                    <button @click="generatePresentation()" :disabled="isLoading"
-                        class="mt-4 w-full bg-black dark:bg-white dark:text-black dark:hover:bg-gray-200 text-white font-medium py-3 px-6 rounded-lg hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all hover-lift">
-                        <span x-show="!isLoading">Generate Presentation</span>
-                        <span x-show="isLoading" class="flex items-center justify-center gap-2">
-                            <div class="loader" :class="isDarkMode ? 'loader-dark' : 'loader-light'"
-                                style="width: 16px; height: 16px; border-width: 2px;"></div>Generating...
-                        </span>
-                    </button>
-                </div>
-
-                <div x-show="presentationOutput" x-cloak
-                    class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
-                    <div class="prose dark:prose-invert max-w-none" x-html="presentationOutput"></div>
-                </div>
-            </div>
-        </div>
-        <!-- DIAGRAMS SECTION -->
-        <div x-show="currentSection === 'diagrams'" class="page-section">
-            <div class="mb-8">
-                <h1 class="text-4xl font-bold mb-2">Create Diagrams</h1>
-                <p class="text-gray-600 dark:text-gray-400">Generate various types of diagrams and charts</p>
-            </div>
-            <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 mb-6">
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-4">Select Diagram
-                    Type</label>
-                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                    <template x-for="diagram in diagramTypes" :key="diagram.type">
-                        <button @click="selectedDiagram = diagram"
-                            :class="{ 'active': selectedDiagram && selectedDiagram.type === diagram.type }"
-                            class="diagram-card p-4 border border-gray-300 dark:border-gray-600 dark:hover:border-white rounded-lg text-left">
-                            <i :class="diagram.icon" class="text-2xl mb-2 block text-center"></i>
-                            <div class="text-sm font-semibold mb-1" x-text="diagram.name"></div>
-                            <div class="text-xs text-gray-500 dark:text-gray-400" x-text="diagram.description"></div>
-                        </button>
-                    </template>
-                </div>
-                <div x-show="selectedDiagram" x-cloak
-                    class="mt-6 p-4 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg">
-                    <template x-for="diagram in diagramTypes" :key="diagram.type">
-                        <div x-show="selectedDiagram && selectedDiagram.type === diagram.type">
-                            <div class="flex items-start gap-3 mb-3"><i :class="diagram.icon" class="text-3xl mt-1"></i>
-                                <div>
-                                    <h3 class="font-bold text-lg mb-1" x-text="diagram.name"></h3>
-                                    <p class="text-sm text-gray-600 dark:text-gray-300 mb-2"
-                                        x-text="diagram.description"></p>
-                                    <p class="text-xs text-gray-500 dark:text-gray-400"><span class="font-medium">Use
-                                            cases:</span> <span x-text="diagram.example"></span></p>
-                                </div>
-                            </div>
-                        </div>
-                    </template>
-                </div>
-            </div>
-            <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 mb-6">
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3"><span
-                        x-text="selectedDiagram ? 'Describe Your ' + selectedDiagram.name : 'Select a diagram type above'"></span></label>
-                <textarea x-model="diagramInput" rows="6" :disabled="!selectedDiagram"
-                    class="w-full px-4 py-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent resize-none transition-all disabled:bg-gray-700 disabled:cursor-not-allowed dark:placeholder-gray-400"
-                    :placeholder="selectedDiagram ? 'Describe what you want to visualize...' : 'Please select a diagram type first'"></textarea>
-                <div x-show="selectedDiagram && selectedDiagram.type === 'Mindmap'"
-                    class="mt-4 flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
-                    <label class="flex items-center gap-3 cursor-pointer">
-                        <div class="relative"><input type="checkbox" x-model="useIcons" class="sr-only peer">
-                            <div
-                                class="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:bg-black dark:peer-checked:bg-white transition-all">
-                            </div>
-                            <div
-                                class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-all peer-checked:translate-x-5">
-                            </div>
-                        </div><span class="text-sm font-medium">Add contextual icons</span>
-                    </label>
-                </div>
-                <button @click="generateDiagram()" :disabled="!selectedDiagram || isLoading"
-                    class="mt-4 w-full bg-black dark:bg-white dark:text-black dark:hover:bg-gray-200 text-white font-medium py-3 px-6 rounded-lg hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all hover-lift">
-                    <span x-show="!isLoading">Generate Diagram</span>
-                    <span x-show="isLoading" class="flex items-center justify-center gap-2">
-                        <div class="loader" :class="isDarkMode ? 'loader-dark' : 'loader-light'"
-                            style="width: 16px; height: 16px; border-width: 2px;"></div>Generating...
-                    </span>
+                <button id="genDocBtn" class="primary-btn">
+                    <span>Generate Document</span>
+                    <div class="loader hidden"></div>
                 </button>
             </div>
-            <div x-show="diagramOutput" x-cloak
-                class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
-                <div x-show="renderSuccess" class="flex justify-between items-center mb-4">
-                    <h3 class="text-lg font-semibold">Your Diagram</h3>
-                    <button @click="downloadDiagram()"
-                        class="flex items-center gap-2 px-4 py-2 bg-black dark:bg-white dark:text-black dark:hover:bg-gray-200 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-all hover-lift"><i
-                            class="fas fa-download"></i>Download PNG</button>
+        </section>
+
+        <!-- SLIDES SECTION (COMMENTED OUT) -->
+        <!-- 
+        <section id="slides" class="hero-section">
+            <div class="hero-text">
+                <h1>AI Presentations</h1>
+                <p>Turn any topic into a professional slide deck in seconds.</p>
+            </div>
+
+            <div class="glass-card">
+                <div class="input-group">
+                    <label>Presentation Topic</label>
+                    <textarea id="pptInput" placeholder="Describe your presentation..."></textarea>
                 </div>
-                <div id="diagram-output"
-                    :class="{ 'mermaid p-6': renderSuccess, 'bg-gray-50 dark:bg-gray-900 rounded-lg': renderSuccess }"
-                    x-html="diagramOutput"></div>
+                <button id="genPptBtn" class="primary-btn">
+                    <span>Generate Slide Deck</span>
+                    <div class="loader hidden"></div>
+                </button>
+            </div>
+        </section>
+        -->
+
+        <!-- DIAGRAMS SECTION -->
+        <section id="diagrams" class="hero-section">
+            <div class="hero-text">
+                <h1>Visual Diagrams</h1>
+                <p>NIM-powered Mermaid.js code for complex abstractions.</p>
+            </div>
+
+            <div class="diagram-layout">
+                <div class="glass-card sidebar">
+                    <div class="input-group">
+                        <label>Diagram Topic</label>
+                        <textarea id="diagInput" placeholder="Describe the process..."></textarea>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Diagram Type</label>
+                        <div class="diagram-type-grid">
+                            <div class="diag-type-card active" data-type="Flowchart">
+                                <i class="fas fa-sitemap"></i>
+                                <span>Flowchart</span>
+                            </div>
+                            <div class="diag-type-card" data-type="Sequence Diagram">
+                                <i class="fas fa-exchange-alt"></i>
+                                <span>Sequence</span>
+                            </div>
+                            <div class="diag-type-card" data-type="Class Diagram">
+                                <i class="fas fa-project-diagram"></i>
+                                <span>Class</span>
+                            </div>
+                            <div class="diag-type-card" data-type="State Diagram">
+                                <i class="fas fa-sync-alt"></i>
+                                <span>State</span>
+                            </div>
+                            <div class="diag-type-card" data-type="Mindmap">
+                                <i class="fas fa-brain"></i>
+                                <span>Mindmap</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button id="genDiagBtn" class="primary-btn">Generate Diagram</button>
+                </div>
+
+                <div class="glass-card preview-area">
+                    <div id="mermaidOutput" class="mermaid-container">
+                        <div class="placeholder">Result will appear here...</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Status Log Overlay -->
+        <div id="statusLog" class="status-log hidden">
+            <div class="log-content">
+                <div class="log-header">
+                    <i class="fas fa-robot"></i>
+                    <span>AI Engine Busy</span>
+                </div>
+                <div id="logMessages" class="log-messages"></div>
             </div>
         </div>
     </main>
-    <script type="module" src="app.js"></script>
+
+    <script src="app.js"></script>
 </body>
 
 </html>
