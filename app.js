@@ -42,7 +42,7 @@ function logStatus(message, isNew = false) {
     logOverlay.classList.remove('hidden');
     const msgDiv = document.createElement('div');
     msgDiv.className = 'msg';
-    msgDiv.textContent = `> ${ message } `;
+    msgDiv.textContent = `> ${message} `;
     logMessages.appendChild(msgDiv);
     logMessages.scrollTop = logMessages.scrollHeight;
 }
@@ -54,11 +54,36 @@ function hideLog() {
 }
 
 // --- API Helpers ---
+function getDeviceId() {
+    const info = [
+        navigator.userAgent,
+        screen.height,
+        screen.width,
+        new Date().getTimezoneOffset()
+    ].join('|');
+
+    // Simple hash function for the string
+    let hash = 0;
+    for (let i = 0; i < info.length; i++) {
+        const char = info.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash; // Convert to 32bit integer
+    }
+    return Math.abs(hash).toString(16);
+}
+
 async function generateGeneric(endpoint, body, onSuccess) {
+    const adminToken = localStorage.getItem('STUDENT_TOOLS_ADMIN');
+    const deviceId = getDeviceId();
+
     try {
-        const response = await fetch(`${ API_BASE }${ endpoint } `, {
+        const response = await fetch(`${API_BASE}${endpoint}`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Admin-Token': adminToken || "",
+                'X-Device-Id': deviceId
+            },
             body: JSON.stringify(body)
         });
 
@@ -66,7 +91,7 @@ async function generateGeneric(endpoint, body, onSuccess) {
 
         return response;
     } catch (error) {
-        logStatus(`Error: ${ error.message } `);
+        logStatus(`Error: ${error.message} `);
         console.error(error);
         return null;
     }
@@ -94,7 +119,7 @@ document.getElementById('genDocBtn').addEventListener('click', async () => {
 
     if (pdfResponse) {
         const blob = await pdfResponse.blob();
-        downloadBlob(blob, `${ plan.title.replace(/ /g, '_') }.pdf`);
+        downloadBlob(blob, `${plan.title.replace(/ /g, '_')}.pdf`);
         logStatus("Success! Your professional academic paper is ready.");
         hideLog();
     }
@@ -136,7 +161,7 @@ document.getElementById('genDiagBtn').addEventListener('click', async () => {
 
     const container = document.getElementById('mermaidOutput');
     container.innerHTML = '<div class="loader"></div>';
-    logStatus(`Architecting ${ type } diagram...`, true);
+    logStatus(`Architecting ${type} diagram...`, true);
 
     const response = await generateGeneric('/generate/diagram', { topic, type });
     if (response) {
@@ -166,6 +191,13 @@ function downloadBlob(blob, filename) {
     a.click();
     window.URL.revokeObjectURL(url);
 }
+
+// --- God Mode Secret Activation ---
+// Open console and type: activateGodMode("your_password")
+window.activateGodMode = (pw) => {
+    localStorage.setItem('STUDENT_TOOLS_ADMIN', pw);
+    console.log("God Mode Activated. Unlimited uses enabled.");
+};
 
 // Initialize Mermaid
 mermaid.initialize({ startOnLoad: false, theme: 'dark' });
