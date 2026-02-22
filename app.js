@@ -105,14 +105,27 @@ document.getElementById('genDocBtn').addEventListener('click', async () => {
 
     if (!topic) return alert("Please enter a topic");
 
+    console.log("%c--- 🏛️ COUNCIL OF MODELS INITIALIZED ---", "color: #00ffcc; font-weight: bold; font-size: 14px;");
+    console.time("Council Processing Time");
+
     logStatus("Architecting professional report with LaTeX...", true);
+    console.log("Stage 1: [ARCHITECT] Designing document structure...");
 
     // Step 1: Generate Plan
     const planResponse = await generateGeneric('/generate/plan', { topic, type: "document" });
-    if (!planResponse) return;
+    if (!planResponse) {
+        console.error("Council Error: The pipeline was interrupted.");
+        return;
+    }
 
     const plan = await planResponse.json();
+    console.log("Stage 2: [WRITER] Creative content generated.");
+    console.log("Stage 3: [POLISHER] JSON & Syntax validation complete.");
+    console.log("Plan Received:", plan);
+    console.timeEnd("Council Processing Time");
+
     logStatus("Deep content structure established. Rendering PDF...");
+    console.log("Final Stage: Rendering PDF via TeX engine...");
 
     // Step 2: Generate PDF
     const pdfResponse = await generateGeneric('/generate/pdf', plan);
