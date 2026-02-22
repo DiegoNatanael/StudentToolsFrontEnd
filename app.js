@@ -199,5 +199,22 @@ window.activateGodMode = (pw) => {
     console.log("God Mode Activated. Unlimited uses enabled.");
 };
 
+// --- Admin Check on Load ---
+async function checkAdminStatus() {
+    try {
+        const adminToken = localStorage.getItem('STUDENT_TOOLS_ADMIN');
+        const response = await fetch(`${API_BASE}/health`, {
+            headers: { 'X-Admin-Token': adminToken || "" }
+        });
+        const data = await response.json();
+        if (data.is_admin) {
+            console.log("God Mode Status: ACTIVE 👑");
+        } else {
+            console.warn("God Mode Status: INACTIVE 👤 (1 use per day)");
+        }
+    } catch (e) { }
+}
+checkAdminStatus();
+
 // Initialize Mermaid
 mermaid.initialize({ startOnLoad: false, theme: 'dark' });
