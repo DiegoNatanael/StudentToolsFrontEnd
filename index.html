@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Tools V2 | Pro Edition</title>
+    <link rel="icon" type="image/png" href="StudentTools.png">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;800&display=swap"
+        rel="stylesheet">
+
+    <!-- Icons & Mermaiid -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="dark-mode">
+    <!-- Animated background -->
+    <div class="bg-vignette"></div>
+    <div class="blob-gradient blob-1"></div>
+    <div class="blob-gradient blob-2"></div>
+    <div class="blob-gradient blob-3"></div>
+
+    <nav class="glass-nav">
+        <div class="nav-content">
+            <div class="logo">
+                <img src="StudentTools.png" alt="Logo">
+                <span>StudentTools</span>
+            </div>
+            <div class="nav-links">
+                <button class="nav-btn active" data-section="docs">Documents</button>
+                <!-- <button class="nav-btn" data-section="slides">Presentations</button> -->
+                <button class="nav-btn" data-section="diagrams">Diagrams</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+        <!-- DOCS SECTION -->
+        <section id="docs" class="hero-section active">
+            <div class="hero-text">
+                <h1>Smart Documents</h1>
+                <p>NIM-powered document generation with professional typography.</p>
+            </div>
+
+            <div class="glass-card">
+                <div class="input-group">
+                    <label>Document Topic</label>
+                    <textarea id="docInput"
+                        placeholder="What should we write about today? e.g. 'The impact of quantum computing on modern cryptography'"></textarea>
+                </div>
+
+                <div class="options-grid">
+                    <div class="input-group">
+                        <label>Style</label>
+                        <select id="docStyle">
+                            <option value="formal">📋 Formal Business</option>
+                            <option value="academic">🎓 Academic Scholarly</option>
+                            <option value="modern">✨ Modern Minimalist</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button id="genDocBtn" class="primary-btn">
+                    <span>Generate Document</span>
+                    <div class="loader hidden"></div>
+                </button>
+            </div>
+        </section>
+
+        <!-- SLIDES SECTION (COMMENTED OUT) -->
+        <!-- 
+        <section id="slides" class="hero-section">
+            <div class="hero-text">
+                <h1>AI Presentations</h1>
+                <p>Turn any topic into a professional slide deck in seconds.</p>
+            </div>
+
+            <div class="glass-card">
+                <div class="input-group">
+                    <label>Presentation Topic</label>
+                    <textarea id="pptInput" placeholder="Describe your presentation..."></textarea>
+                </div>
+                <button id="genPptBtn" class="primary-btn">
+                    <span>Generate Slide Deck</span>
+                    <div class="loader hidden"></div>
+                </button>
+            </div>
+        </section>
+        -->
+
+        <!-- DIAGRAMS SECTION -->
+        <section id="diagrams" class="hero-section">
+            <div class="hero-text">
+                <h1>Visual Diagrams</h1>
+                <p>NIM-powered Mermaid.js code for complex abstractions.</p>
+            </div>
+
+            <div class="diagram-layout">
+                <div class="glass-card sidebar">
+                    <div class="input-group">
+                        <label>Diagram Topic</label>
+                        <textarea id="diagInput" placeholder="Describe the process..."></textarea>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Diagram Type</label>
+                        <div class="diagram-type-grid">
+                            <div class="diag-type-card active" data-type="Flowchart">
+                                <i class="fas fa-sitemap"></i>
+                                <span>Flowchart</span>
+                            </div>
+                            <div class="diag-type-card" data-type="Sequence Diagram">
+                                <i class="fas fa-exchange-alt"></i>
+                                <span>Sequence</span>
+                            </div>
+                            <div class="diag-type-card" data-type="Class Diagram">
+                                <i class="fas fa-project-diagram"></i>
+                                <span>Class</span>
+                            </div>
+                            <div class="diag-type-card" data-type="State Diagram">
+                                <i class="fas fa-sync-alt"></i>
+                                <span>State</span>
+                            </div>
+                            <div class="diag-type-card" data-type="Mindmap">
+                                <i class="fas fa-brain"></i>
+                                <span>Mindmap</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button id="genDiagBtn" class="primary-btn">Generate Diagram</button>
+                </div>
+
+                <div class="glass-card preview-area">
+                    <div id="mermaidOutput" class="mermaid-container">
+                        <div class="placeholder">Result will appear here...</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Status Log Overlay -->
+        <div id="statusLog" class="status-log hidden">
+            <div class="log-content">
+                <div class="log-header">
+                    <i class="fas fa-robot"></i>
+                    <span>AI Engine Busy</span>
+                </div>
+                <div id="logMessages" class="log-messages"></div>
+            </div>
+        </div>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
