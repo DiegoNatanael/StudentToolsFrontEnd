@@ -99,7 +99,7 @@ async function generateGeneric(endpoint, body, onSuccess) {
 
 // --- Specific Generators ---
 
-// DOCUMENT GENERATION
+// DOCUMENT GENERATION (V2 — Direct LaTeX Pipeline)
 document.getElementById('genDocBtn').addEventListener('click', async (e) => {
     const btn = e.currentTarget;
     const topic = document.getElementById('docInput').value.trim();
@@ -112,39 +112,40 @@ document.getElementById('genDocBtn').addEventListener('click', async (e) => {
         btn.style.opacity = "0.5";
         btn.style.cursor = "not-allowed";
 
-        console.log("%c--- 🏛️ COUNCIL OF MODELS INITIALIZED ---", "color: #00ffcc; font-weight: bold; font-size: 14px;");
-        console.time("Council Processing Time");
+        console.log("%c--- 🏛️ COUNCIL V2 (Direct LaTeX) ---", "color: #00ffcc; font-weight: bold; font-size: 14px;");
+        console.time("Total Generation Time");
 
-        logStatus("Architecting professional report with LaTeX...", true);
-        console.log("Stage 1: [ARCHITECT] Designing document structure...");
+        logStatus("AI is writing your LaTeX document...", true);
+        console.log("[Step 1] Classifying scale & generating LaTeX...");
 
-        // Step 1: Generate Plan
+        // Step 1: Generate LaTeX code
         const planResponse = await generateGeneric('/generate/plan', { topic, type: "document" });
         if (!planResponse) {
-            console.error("Council Error: The pipeline was interrupted.");
+            console.error("Pipeline Error: LaTeX generation was interrupted.");
             return;
         }
 
-        const plan = await planResponse.json();
-        console.log("Stage 2: [WRITER] Creative content generated.");
-        console.log("Stage 3: [POLISHER] JSON & Syntax validation complete.");
-        console.log("Plan Received:", plan);
-        console.timeEnd("Council Processing Time");
+        const result = await planResponse.json();
+        const latexSize = result.latex ? result.latex.length : 0;
+        console.log(`[Step 1 Complete] LaTeX received: ${latexSize} chars`);
 
-        logStatus("Deep content structure established. Rendering PDF...");
-        console.log("Final Stage: Rendering PDF via TeX engine...");
+        logStatus("LaTeX generated! Compiling PDF...");
+        console.log("[Step 2] Compiling LaTeX → PDF...");
 
-        // Step 2: Generate PDF
-        const pdfResponse = await generateGeneric('/generate/pdf', plan);
+        // Step 2: Compile LaTeX to PDF
+        const pdfResponse = await generateGeneric('/generate/pdf', { latex: result.latex });
 
         if (pdfResponse) {
             const blob = await pdfResponse.blob();
-            downloadBlob(blob, `${plan.title.replace(/ /g, '_')}.pdf`);
-            logStatus("Success! Your professional academic paper is ready.");
+            const safeName = topic.replace(/[^a-zA-Z0-9áéíóúñÁÉÍÓÚÑ ]/g, '').replace(/ /g, '_');
+            downloadBlob(blob, `${safeName}.pdf`);
+            console.timeEnd("Total Generation Time");
+            logStatus("Success! Your professional document is ready.");
             hideLog();
         }
     } catch (error) {
-        logStatus(`Pipeline Fail: ${error.message}`);
+        console.error("Pipeline Error:", error);
+        logStatus(`Error: ${error.message}`);
     } finally {
         btn.disabled = false;
         btn.style.opacity = "1";
