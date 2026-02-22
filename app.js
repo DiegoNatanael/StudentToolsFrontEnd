@@ -1,6 +1,9 @@
 // app.js
 
-const API_BASE = "http://127.0.0.1:8000/api";
+// Set this to your Render URL after deploying (e.g., https://your-app.onrender.com/api)
+const API_BASE = window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost"
+    ? "http://127.0.0.1:8000/api"
+    : "https://studenttools.onrender.com/api";
 
 // --- UI Elements ---
 const navButtons = document.querySelectorAll('.nav-btn');
