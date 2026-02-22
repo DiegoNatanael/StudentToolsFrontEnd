@@ -1,9 +1,7 @@
 // app.js
 
-// Set this to your Render URL after deploying (e.g., https://your-app.onrender.com/api)
-const API_BASE = window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost"
-    ? "http://127.0.0.1:8000/api"
-    : "https://studenttools.onrender.com/api";
+// Set this to your Production API Route (Render)
+const API_BASE = "https://studenttools.onrender.com/api";
 
 // --- UI Elements ---
 const navButtons = document.querySelectorAll('.nav-btn');
@@ -44,7 +42,7 @@ function logStatus(message, isNew = false) {
     logOverlay.classList.remove('hidden');
     const msgDiv = document.createElement('div');
     msgDiv.className = 'msg';
-    msgDiv.textContent = `> ${message}`;
+    msgDiv.textContent = `> ${ message } `;
     logMessages.appendChild(msgDiv);
     logMessages.scrollTop = logMessages.scrollHeight;
 }
@@ -58,7 +56,7 @@ function hideLog() {
 // --- API Helpers ---
 async function generateGeneric(endpoint, body, onSuccess) {
     try {
-        const response = await fetch(`${API_BASE}${endpoint}`, {
+        const response = await fetch(`${ API_BASE }${ endpoint } `, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(body)
@@ -68,7 +66,7 @@ async function generateGeneric(endpoint, body, onSuccess) {
 
         return response;
     } catch (error) {
-        logStatus(`Error: ${error.message}`);
+        logStatus(`Error: ${ error.message } `);
         console.error(error);
         return null;
     }
@@ -96,7 +94,7 @@ document.getElementById('genDocBtn').addEventListener('click', async () => {
 
     if (pdfResponse) {
         const blob = await pdfResponse.blob();
-        downloadBlob(blob, `${plan.title.replace(/ /g, '_')}.pdf`);
+        downloadBlob(blob, `${ plan.title.replace(/ /g, '_') }.pdf`);
         logStatus("Success! Your professional academic paper is ready.");
         hideLog();
     }
@@ -114,7 +112,7 @@ document.getElementById('genPptBtn').addEventListener('click', async () => {
     if (!planResponse) return;
 
     const plan = await planResponse.json();
-    logStatus(`Planning ${plan.slides.length} slides. Formatting PPTX...`);
+    logStatus(`Planning ${ plan.slides.length } slides.Formatting PPTX...`);
 
     const pptResponse = await generateGeneric('/generate/pptx', {
         title: plan.title,
@@ -123,7 +121,7 @@ document.getElementById('genPptBtn').addEventListener('click', async () => {
 
     if (pptResponse) {
         const blob = await pptResponse.blob();
-        downloadBlob(blob, `${plan.title.replace(/ /g, '_')}.pptx`);
+        downloadBlob(blob, `${ plan.title.replace(/ /g, '_') }.pptx`);
         logStatus("Presentation generated successfully!");
         hideLog();
     }
@@ -138,7 +136,7 @@ document.getElementById('genDiagBtn').addEventListener('click', async () => {
 
     const container = document.getElementById('mermaidOutput');
     container.innerHTML = '<div class="loader"></div>';
-    logStatus(`Architecting ${type} diagram...`, true);
+    logStatus(`Architecting ${ type } diagram...`, true);
 
     const response = await generateGeneric('/generate/diagram', { topic, type });
     if (response) {
