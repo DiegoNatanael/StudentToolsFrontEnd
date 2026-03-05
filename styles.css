@@ -388,3 +388,180 @@ textarea {
         transform: rotate(360deg);
     }
 }
+/* --- Presentation Overlay & Reveal.js --- */
+.presentation-overlay {
+    position: fixed;
+    inset: 0;
+    background: #050505;
+    z-index: 5000;
+    display: flex;
+    flex-direction: column;
+    animation: zoomIn 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+@keyframes zoomIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.close-overlay-btn {
+    position: absolute;
+    top: 30px;
+    right: 30px;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: white;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1.5rem;
+    z-index: 5100;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.close-overlay-btn:hover {
+    background: rgba(255, 0, 0, 0.5);
+    transform: rotate(90deg);
+}
+
+.reveal-container {
+    flex: 1;
+    width: 100%;
+    height: 100%;
+}
+
+.overlay-controls {
+    position: absolute;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 5100;
+}
+
+.secondary-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--card-border);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 99px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: var(--transition);
+    backdrop-filter: blur(8px);
+}
+
+.secondary-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: white;
+}
+
+/* Reveal.js Custom Styles (Inspired by Engine.js) */
+.reveal .slides section {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+}
+
+.reveal h1, .reveal h2, .reveal h3 {
+    text-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+.reveal .divider {
+    width: 60px;
+    height: 3px;
+    background: var(--accent);
+    margin: 30px 0;
+}
+
+.reveal blockquote {
+    border-left: 4px solid var(--accent);
+    background: rgba(255,255,255,0.05);
+    padding: 30px;
+    font-style: italic;
+    border-radius: 0 12px 12px 0;
+}
+
+
+/* --- TOEFL Template Specific Layouts --- */
+.reveal .slide-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 80px;
+    width: 100%;
+    text-align: left;
+}
+
+.reveal .col-text {
+    flex: 1.4;
+}
+
+.reveal h1 { 
+    font-weight: 600; 
+    text-transform: uppercase; 
+    font-size: 3.8em !important; 
+    letter-spacing: -0.04em; 
+    line-height: 0.9;
+}
+
+.reveal h2 { 
+    font-weight: 400; 
+    text-transform: uppercase; 
+    font-size: 2.2em !important; 
+    margin-bottom: 20px; 
+}
+
+.reveal h3 { 
+    font-weight: 300; 
+    color: var(--text-dim) !important; 
+    text-transform: uppercase; 
+    font-size: 0.85em !important; 
+    letter-spacing: 0.5em; 
+    margin-bottom: 15px; 
+}
+
+.reveal p { 
+    color: var(--text-dim); 
+    font-weight: 300; 
+    line-height: 1.4; 
+    font-size: 1.2em !important; 
+}
+
+.reveal table { 
+    border-collapse: collapse; 
+    width: 100%; 
+    color: var(--text-dim); 
+    font-size: 0.85em; 
+    margin-top: 20px; 
+}
+
+.reveal th { 
+    color: white; 
+    border-bottom: 2px solid var(--card-border); 
+    padding: 15px; 
+    text-transform: uppercase; 
+    font-size: 0.7em; 
+    text-align: left; 
+}
+
+.reveal td { 
+    padding: 18px 15px; 
+    border-bottom: 1px solid var(--card-border); 
+    line-height: 1.2; 
+}
+
+.reveal .source-link { 
+    font-size: 0.5em; 
+    color: #444; 
+    text-decoration: none; 
+    text-transform: uppercase; 
+    letter-spacing: 2px; 
+    margin-top: 25px; 
+    display: block; 
+}
+

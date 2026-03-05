@@ -153,33 +153,168 @@ document.getElementById('genDocBtn').addEventListener('click', async (e) => {
     }
 });
 
-/*
+// --- Global State for Presentation ---
+let lastGeneratedSlides = null;
+
 // PRESENTATION GENERATION
-document.getElementById('genPptBtn').addEventListener('click', async () => {
+document.getElementById('genPptBtn').addEventListener('click', async (e) => {
+    const btn = e.currentTarget;
     const topic = document.getElementById('pptInput').value.trim();
     if (!topic) return alert("Please enter a topic");
+    if (btn.disabled) return;
 
-    logStatus("Brainstorming slides with Llama 3.1 405b...", true);
+    try {
+        btn.disabled = true;
+        btn.style.opacity = "0.5";
+        logStatus("Planning your presentation slides...", true);
 
-    const planResponse = await generateGeneric('/generate/plan', { topic, type: "presentation" });
-    if (!planResponse) return;
+        // Step 1: Generate the plan/content
+        const response = await generateGeneric('/generate/plan', { topic, type: "presentation" });
+        if (!response) return;
 
-    const plan = await planResponse.json();
-    logStatus(`Planning ${ plan.slides.length } slides.Formatting PPTX...`);
+        const data = await response.json();
+        lastGeneratedSlides = data;
 
+        logStatus(`Generated ${data.slides.length} slides. Building deck...`);
+
+        // Step 2: Render in Overlay
+        renderRevealPresentation(data);
+
+        logOverlay.classList.add('hidden');
+    } catch (error) {
+        logStatus(`Error: ${error.message}`);
+    } finally {
+        btn.disabled = false;
+        btn.style.opacity = "1";
+    }
+});
+
+function renderRevealPresentation(data) {
+    const overlay = document.getElementById('presentationOverlay');
+    const container = document.getElementById('revealContainer');
+
+    // Create Reveal structure matching TOEFL template
+    let slidesHtml = data.slides.map((slide) => {
+        const layout = slide.layout || 'text';
+
+        if (layout === 'intro') {
+            return `
+                <section>
+                    <h3>${slide.section || 'PRESENTACIÓN'}</h3>
+                    <div class="divider"></div>
+                    <h1>${slide.h1 || data.title}</h1>
+                    <p>${slide.p || ''}</p>
+                </section>
+            `;
+        } else if (layout === 'table' && slide.table) {
+            const headers = slide.table.headers.map(h => `<th>${h}</th>`).join('');
+            const rows = slide.table.rows.map(row => `<tr>${row.map(c => `<td>${c}</td>`).join('')}</tr>`).join('');
+            return `
+                <section>
+                    <h3>${slide.section || 'DATOS'}</h3>
+                    <h2>${slide.h2 || ''}</h2>
+                    <div class="divider"></div>
+                    <table>
+                        <thead><tr>${headers}</tr></thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+                </section>
+            `;
+        } else if (layout === 'conclusion') {
+            return `
+                <section>
+                    <div class="center-content">
+                        <h3>${slide.section || 'FINAL'}</h3>
+                        <h1>${slide.h1 || 'Conclusión'}</h1>
+                        <div class="divider"></div>
+                        <p>${slide.p || ''}</p>
+                    </div>
+                </section>
+            `;
+        } else {
+            // Default "Text" layout
+            return `
+                <section>
+                    <div class="container slide-container">
+                        <div class="col-text">
+                            <h3>${slide.section || ''}</h3>
+                            <h2>${slide.h2 || ''}</h2>
+                            <div class="divider"></div>
+                            ${slide.quote ? `<blockquote>${slide.quote}</blockquote>` : `<p>${slide.p || ''}</p>`}
+                            ${slide.source ? `<a href="#" class="source-link">${slide.source}</a>` : ''}
+                        </div>
+                    </div>
+                </section>
+            `;
+        }
+    }).join('');
+
+    container.innerHTML = `
+        <div class="reveal">
+            <div class="slides">
+                ${slidesHtml}
+            </div>
+        </div>
+    `;
+
+    overlay.classList.remove('hidden');
+
+    // Initialize Reveal
+    const deck = new Reveal(container.querySelector('.reveal'), {
+        controls: false,
+        progress: false,
+        center: true,
+        hash: false,
+        transition: 'fade',
+        transitionSpeed: 'slow',
+        width: 1200,
+        height: 900
+    });
+
+    deck.initialize().then(() => {
+        animateSlide(deck.getCurrentSlide());
+        deck.on('slidechanged', event => animateSlide(event.currentSlide));
+    });
+
+    window.currentDeck = deck;
+}
+
+function animateSlide(slide) {
+    const elements = slide.querySelectorAll('h1, h2, h3, p, .divider, blockquote, table, .source-link');
+    gsap.fromTo(elements,
+        { opacity: 0, y: 40 },
+        { opacity: 1, y: 0, duration: 1.2, stagger: 0.15, ease: "power3.out" }
+    );
+}
+
+// Global click to advance
+document.getElementById('revealContainer').addEventListener('mousedown', (e) => {
+    if (window.currentDeck && e.button === 0) {
+        window.currentDeck.next();
+    }
+});
+
+// Close Presentation
+document.getElementById('closePresentation').addEventListener('click', () => {
+    document.getElementById('presentationOverlay').classList.add('hidden');
+});
+
+// Download PPTX
+document.getElementById('downloadPptxBtn').addEventListener('click', async () => {
+    if (!lastGeneratedSlides) return;
+
+    logStatus("Converting to PPTX format...", true);
     const pptResponse = await generateGeneric('/generate/pptx', {
-        title: plan.title,
-        slides: plan.slides
+        title: lastGeneratedSlides.title,
+        slides: lastGeneratedSlides.slides
     });
 
     if (pptResponse) {
         const blob = await pptResponse.blob();
-        downloadBlob(blob, `${ plan.title.replace(/ /g, '_') }.pptx`);
-        logStatus("Presentation generated successfully!");
+        downloadBlob(blob, `${lastGeneratedSlides.title.replace(/ /g, '_')}.pptx`);
         hideLog();
     }
 });
-*/
 
 // DIAGRAM GENERATION
 document.getElementById('genDiagBtn').addEventListener('click', async () => {
