@@ -39,6 +39,14 @@
                 <button class="nav-btn" data-section="slides">Presentations</button>
                 <button class="nav-btn" data-section="diagrams">Diagrams</button>
             </div>
+            <div class="nav-user">
+                <div id="userInfo" class="user-info hidden">
+                    <span id="quotaBadge" class="quota-badge">5</span>
+                    <span id="userName" class="user-name">User</span>
+                    <button id="logoutBtn" class="nav-btn logout-btn"><i class="fas fa-sign-out-alt"></i></button>
+                </div>
+                <button id="openAuthBtn" class="nav-btn auth-btn"><i class="fas fa-user"></i> Sign In</button>
+            </div>
         </div>
     </nav>
 
@@ -145,6 +153,53 @@
             </div>
         </div>
     </main>
+
+    <!-- Auth Modal -->
+    <div id="authOverlay" class="auth-overlay hidden">
+        <div class="auth-card glass-card">
+            <button id="closeAuth" class="close-auth-btn"><i class="fas fa-times"></i></button>
+            <div class="auth-tabs">
+                <button class="auth-tab active" data-tab="login">Sign In</button>
+                <button class="auth-tab" data-tab="register">Register</button>
+            </div>
+
+            <!-- Login Form -->
+            <form id="loginForm" class="auth-form active">
+                <div class="input-group">
+                    <label>Email</label>
+                    <input type="email" id="loginEmail" placeholder="your@email.com" required>
+                </div>
+                <div class="input-group">
+                    <label>Password</label>
+                    <input type="password" id="loginPassword" placeholder="••••••••" required>
+                </div>
+                <div id="loginError" class="auth-error hidden"></div>
+                <button type="submit" class="primary-btn">Sign In</button>
+            </form>
+
+            <!-- Register Form -->
+            <form id="registerForm" class="auth-form">
+                <div class="input-group">
+                    <label>Name</label>
+                    <input type="text" id="regName" placeholder="Your name" required>
+                </div>
+                <div class="input-group">
+                    <label>Email</label>
+                    <input type="email" id="regEmail" placeholder="your@email.com" required>
+                </div>
+                <div class="input-group">
+                    <label>Password</label>
+                    <input type="password" id="regPassword" placeholder="Min 6 characters" required>
+                </div>
+                <div class="input-group">
+                    <label>Confirm Password</label>
+                    <input type="password" id="regPasswordConfirm" placeholder="Repeat password" required>
+                </div>
+                <div id="registerError" class="auth-error hidden"></div>
+                <button type="submit" class="primary-btn">Create Account</button>
+            </form>
+        </div>
+    </div>
 
     <!-- Presentation Viewer Overlay -->
     <div id="presentationOverlay" class="presentation-overlay hidden">

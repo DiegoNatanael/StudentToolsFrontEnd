@@ -1,25 +1,251 @@
 // app.js
 
-// Set this to your Production API Route (Render)
-const API_BASE = "https://studenttools.onrender.com/api";
+// --- API Endpoints ---
+const AI_API = "https://studenttools.onrender.com/api";      // AI Backend (Python/FastAPI)
+const LARAVEL_API = "http://127.0.0.1:8001/api";             // Laravel Backend (Auth + Quota)
 
 // --- UI Elements ---
-const navButtons = document.querySelectorAll('.nav-btn');
+const navButtons = document.querySelectorAll('.nav-btn:not(.auth-btn):not(.logout-btn)');
 const sections = document.querySelectorAll('.hero-section');
 const logOverlay = document.getElementById('statusLog');
 const logMessages = document.getElementById('logMessages');
 
-// --- State Management ---
+// --- Auth State ---
+let authToken = localStorage.getItem('ST_AUTH_TOKEN');
+let currentUser = null;
 let currentSection = 'docs';
 let currentDiagType = 'Flowchart';
 
-// --- Navigation ---
+// ============================================================
+// AUTH SYSTEM
+// ============================================================
+
+const authOverlay = document.getElementById('authOverlay');
+const openAuthBtn = document.getElementById('openAuthBtn');
+const closeAuthBtn = document.getElementById('closeAuth');
+const userInfoEl = document.getElementById('userInfo');
+const userNameEl = document.getElementById('userName');
+const quotaBadgeEl = document.getElementById('quotaBadge');
+const logoutBtn = document.getElementById('logoutBtn');
+
+// Open/Close Auth Modal
+openAuthBtn.addEventListener('click', () => authOverlay.classList.remove('hidden'));
+closeAuthBtn.addEventListener('click', () => authOverlay.classList.add('hidden'));
+authOverlay.addEventListener('click', (e) => {
+    if (e.target === authOverlay) authOverlay.classList.add('hidden');
+});
+
+// Tab switching
+document.querySelectorAll('.auth-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+        document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
+        tab.classList.add('active');
+        const formId = tab.dataset.tab === 'login' ? 'loginForm' : 'registerForm';
+        document.getElementById(formId).classList.add('active');
+    });
+});
+
+// Login
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const errorEl = document.getElementById('loginError');
+    errorEl.classList.add('hidden');
+
+    try {
+        const resp = await fetch(`${LARAVEL_API}/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            body: JSON.stringify({
+                email: document.getElementById('loginEmail').value,
+                password: document.getElementById('loginPassword').value,
+            })
+        });
+
+        const data = await resp.json();
+        if (!resp.ok) throw new Error(data.message || data.errors?.email?.[0] || 'Login failed');
+
+        handleAuthSuccess(data);
+    } catch (err) {
+        errorEl.textContent = err.message;
+        errorEl.classList.remove('hidden');
+    }
+});
+
+// Register
+document.getElementById('registerForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const errorEl = document.getElementById('registerError');
+    errorEl.classList.add('hidden');
+
+    try {
+        const resp = await fetch(`${LARAVEL_API}/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            body: JSON.stringify({
+                name: document.getElementById('regName').value,
+                email: document.getElementById('regEmail').value,
+                password: document.getElementById('regPassword').value,
+                password_confirmation: document.getElementById('regPasswordConfirm').value,
+            })
+        });
+
+        const data = await resp.json();
+        if (!resp.ok) {
+            const firstError = data.errors ? Object.values(data.errors)[0][0] : data.message;
+            throw new Error(firstError || 'Registration failed');
+        }
+
+        handleAuthSuccess(data);
+    } catch (err) {
+        errorEl.textContent = err.message;
+        errorEl.classList.remove('hidden');
+    }
+});
+
+function handleAuthSuccess(data) {
+    authToken = data.token;
+    currentUser = data.user;
+    localStorage.setItem('ST_AUTH_TOKEN', authToken);
+    updateAuthUI();
+    authOverlay.classList.add('hidden');
+    refreshQuota();
+}
+
+// Logout
+logoutBtn.addEventListener('click', async () => {
+    try {
+        await fetch(`${LARAVEL_API}/logout`, {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Authorization': `Bearer ${authToken}`
+            }
+        });
+    } catch (e) { /* ignore */ }
+
+    authToken = null;
+    currentUser = null;
+    localStorage.removeItem('ST_AUTH_TOKEN');
+    updateAuthUI();
+});
+
+function updateAuthUI() {
+    if (authToken && currentUser) {
+        userInfoEl.classList.remove('hidden');
+        openAuthBtn.classList.add('hidden');
+        userNameEl.textContent = currentUser.name;
+    } else {
+        userInfoEl.classList.add('hidden');
+        openAuthBtn.classList.remove('hidden');
+    }
+}
+
+async function refreshQuota() {
+    if (!authToken) return;
+    try {
+        const resp = await fetch(`${LARAVEL_API}/check-quota`, {
+            headers: {
+                'Accept': 'application/json',
+                'Authorization': `Bearer ${authToken}`
+            }
+        });
+        if (!resp.ok) {
+            if (resp.status === 401) { handleExpiredToken(); return; }
+            return;
+        }
+        const data = await resp.json();
+        quotaBadgeEl.textContent = data.remaining === 'unlimited' ? '∞' : data.remaining;
+        quotaBadgeEl.classList.toggle('low', data.remaining !== 'unlimited' && data.remaining <= 1);
+    } catch (e) { console.warn('Quota check failed:', e); }
+}
+
+function handleExpiredToken() {
+    authToken = null;
+    currentUser = null;
+    localStorage.removeItem('ST_AUTH_TOKEN');
+    updateAuthUI();
+}
+
+// Check existing token on load
+async function initAuth() {
+    if (!authToken) { updateAuthUI(); return; }
+    try {
+        const resp = await fetch(`${LARAVEL_API}/me`, {
+            headers: {
+                'Accept': 'application/json',
+                'Authorization': `Bearer ${authToken}`
+            }
+        });
+        if (!resp.ok) throw new Error('Invalid token');
+        currentUser = await resp.json();
+        updateAuthUI();
+        refreshQuota();
+    } catch (e) {
+        handleExpiredToken();
+    }
+}
+initAuth();
+
+// ============================================================
+// QUOTA GATE — checks Laravel before allowing generation
+// ============================================================
+
+async function checkQuotaGate() {
+    // If no auth token, prompt login
+    if (!authToken) {
+        authOverlay.classList.remove('hidden');
+        return false;
+    }
+
+    try {
+        const resp = await fetch(`${LARAVEL_API}/check-quota`, {
+            headers: {
+                'Accept': 'application/json',
+                'Authorization': `Bearer ${authToken}`
+            }
+        });
+
+        if (resp.status === 401) { handleExpiredToken(); authOverlay.classList.remove('hidden'); return false; }
+        const data = await resp.json();
+
+        if (!data.allowed) {
+            logStatus("Daily quota exceeded! Come back tomorrow or upgrade.", true);
+            hideLog();
+            return false;
+        }
+        return true;
+    } catch (e) {
+        console.warn('Quota check failed, allowing generation:', e);
+        return true; // Fail open if Laravel is down
+    }
+}
+
+async function logGeneration(type, topic) {
+    if (!authToken) return;
+    try {
+        await fetch(`${LARAVEL_API}/generations`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'Authorization': `Bearer ${authToken}`
+            },
+            body: JSON.stringify({ type, topic })
+        });
+        refreshQuota();
+    } catch (e) { console.warn('Generation log failed:', e); }
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+
 navButtons.forEach(btn => {
     btn.addEventListener('click', () => {
         const target = btn.dataset.section;
         navButtons.forEach(b => b.classList.remove('active'));
         sections.forEach(s => s.classList.remove('active'));
-
         btn.classList.add('active');
         document.getElementById(target).classList.add('active');
         currentSection = target;
@@ -36,7 +262,10 @@ diagTypeCards.forEach(card => {
     });
 });
 
-// --- Logger System ---
+// ============================================================
+// LOGGER SYSTEM
+// ============================================================
+
 function logStatus(message, isNew = false) {
     if (isNew) logMessages.innerHTML = "";
     logOverlay.classList.remove('hidden');
@@ -53,7 +282,10 @@ function hideLog() {
     }, 2000);
 }
 
-// --- API Helpers ---
+// ============================================================
+// AI API HELPER (talks to Python backend)
+// ============================================================
+
 function getDeviceId() {
     const info = [
         navigator.userAgent,
@@ -62,12 +294,11 @@ function getDeviceId() {
         new Date().getTimezoneOffset()
     ].join('|');
 
-    // Simple hash function for the string
     let hash = 0;
     for (let i = 0; i < info.length; i++) {
         const char = info.charCodeAt(i);
         hash = ((hash << 5) - hash) + char;
-        hash = hash & hash; // Convert to 32bit integer
+        hash = hash & hash;
     }
     return Math.abs(hash).toString(16);
 }
@@ -77,7 +308,7 @@ async function generateGeneric(endpoint, body, onSuccess) {
     const deviceId = getDeviceId();
 
     try {
-        const response = await fetch(`${API_BASE}${endpoint}`, {
+        const response = await fetch(`${AI_API}${endpoint}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -88,7 +319,6 @@ async function generateGeneric(endpoint, body, onSuccess) {
         });
 
         if (!response.ok) throw new Error(await response.text());
-
         return response;
     } catch (error) {
         logStatus(`Error: ${error.message} `);
@@ -97,9 +327,10 @@ async function generateGeneric(endpoint, body, onSuccess) {
     }
 }
 
-// --- Specific Generators ---
+// ============================================================
+// DOCUMENT GENERATION (with Laravel quota)
+// ============================================================
 
-// DOCUMENT GENERATION (V2 — Direct LaTeX Pipeline)
 document.getElementById('genDocBtn').addEventListener('click', async (e) => {
     const btn = e.currentTarget;
     const topic = document.getElementById('docInput').value.trim();
@@ -107,44 +338,35 @@ document.getElementById('genDocBtn').addEventListener('click', async (e) => {
     if (!topic) return alert("Please enter a topic");
     if (btn.disabled) return;
 
+    // CHECK QUOTA FIRST
+    if (!(await checkQuotaGate())) return;
+
     try {
         btn.disabled = true;
         btn.style.opacity = "0.5";
         btn.style.cursor = "not-allowed";
 
-        console.log("%c--- 🏛️ COUNCIL V2 (Direct LaTeX) ---", "color: #00ffcc; font-weight: bold; font-size: 14px;");
-        console.time("Total Generation Time");
-
         logStatus("AI is writing your LaTeX document...", true);
-        console.log("[Step 1] Classifying scale & generating LaTeX...");
 
-        // Step 1: Generate LaTeX code
         const planResponse = await generateGeneric('/generate/plan', { topic, type: "document" });
-        if (!planResponse) {
-            console.error("Pipeline Error: LaTeX generation was interrupted.");
-            return;
-        }
+        if (!planResponse) return;
 
         const result = await planResponse.json();
-        const latexSize = result.latex ? result.latex.length : 0;
-        console.log(`[Step 1 Complete] LaTeX received: ${latexSize} chars`);
-
         logStatus("LaTeX generated! Compiling PDF...");
-        console.log("[Step 2] Compiling LaTeX → PDF...");
 
-        // Step 2: Compile LaTeX to PDF
         const pdfResponse = await generateGeneric('/generate/pdf', { latex: result.latex });
 
         if (pdfResponse) {
             const blob = await pdfResponse.blob();
             const safeName = topic.replace(/[^a-zA-Z0-9áéíóúñÁÉÍÓÚÑ ]/g, '').replace(/ /g, '_');
             downloadBlob(blob, `${safeName}.pdf`);
-            console.timeEnd("Total Generation Time");
             logStatus("Success! Your professional document is ready.");
+
+            // LOG TO LARAVEL
+            await logGeneration('document', topic);
             hideLog();
         }
     } catch (error) {
-        console.error("Pipeline Error:", error);
         logStatus(`Error: ${error.message}`);
     } finally {
         btn.disabled = false;
@@ -153,22 +375,26 @@ document.getElementById('genDocBtn').addEventListener('click', async (e) => {
     }
 });
 
-// --- Global State for Presentation ---
+// ============================================================
+// PRESENTATION GENERATION (with Laravel quota)
+// ============================================================
+
 let lastGeneratedSlides = null;
 
-// PRESENTATION GENERATION
 document.getElementById('genPptBtn').addEventListener('click', async (e) => {
     const btn = e.currentTarget;
     const topic = document.getElementById('pptInput').value.trim();
     if (!topic) return alert("Please enter a topic");
     if (btn.disabled) return;
 
+    // CHECK QUOTA FIRST
+    if (!(await checkQuotaGate())) return;
+
     try {
         btn.disabled = true;
         btn.style.opacity = "0.5";
         logStatus("Planning your presentation slides...", true);
 
-        // Step 1: Generate the plan/content
         const response = await generateGeneric('/generate/plan', { topic, type: "presentation" });
         if (!response) return;
 
@@ -176,11 +402,11 @@ document.getElementById('genPptBtn').addEventListener('click', async (e) => {
         lastGeneratedSlides = data;
 
         logStatus(`Generated ${data.slides.length} slides. Building deck...`);
-
-        // Step 2: Render in Overlay
         renderRevealPresentation(data);
-
         logOverlay.classList.add('hidden');
+
+        // LOG TO LARAVEL
+        await logGeneration('presentation', topic);
     } catch (error) {
         logStatus(`Error: ${error.message}`);
     } finally {
@@ -193,7 +419,6 @@ function renderRevealPresentation(data) {
     const overlay = document.getElementById('presentationOverlay');
     const container = document.getElementById('revealContainer');
 
-    // Create Reveal structure matching TOEFL template
     let slidesHtml = data.slides.map((slide) => {
         const layout = slide.layout || 'text';
 
@@ -232,7 +457,6 @@ function renderRevealPresentation(data) {
                 </section>
             `;
         } else {
-            // Default "Text" layout
             return `
                 <section>
                     <div class="container slide-container">
@@ -259,7 +483,6 @@ function renderRevealPresentation(data) {
 
     overlay.classList.remove('hidden');
 
-    // Initialize Reveal
     const deck = new Reveal(container.querySelector('.reveal'), {
         controls: false,
         progress: false,
@@ -287,19 +510,16 @@ function animateSlide(slide) {
     );
 }
 
-// Global click to advance
 document.getElementById('revealContainer').addEventListener('mousedown', (e) => {
     if (window.currentDeck && e.button === 0) {
         window.currentDeck.next();
     }
 });
 
-// Close Presentation
 document.getElementById('closePresentation').addEventListener('click', () => {
     document.getElementById('presentationOverlay').classList.add('hidden');
 });
 
-// Download PPTX
 document.getElementById('downloadPptxBtn').addEventListener('click', async () => {
     if (!lastGeneratedSlides) return;
 
@@ -316,11 +536,17 @@ document.getElementById('downloadPptxBtn').addEventListener('click', async () =>
     }
 });
 
-// DIAGRAM GENERATION
+// ============================================================
+// DIAGRAM GENERATION (with Laravel quota)
+// ============================================================
+
 document.getElementById('genDiagBtn').addEventListener('click', async () => {
     const topic = document.getElementById('diagInput').value.trim();
     const type = currentDiagType;
     if (!topic) return alert("Please enter a topic");
+
+    // CHECK QUOTA FIRST
+    if (!(await checkQuotaGate())) return;
 
     const container = document.getElementById('mermaidOutput');
     container.innerHTML = '<div class="loader"></div>';
@@ -336,6 +562,9 @@ document.getElementById('genDiagBtn').addEventListener('click', async () => {
         try {
             await mermaid.run({ nodes: [container] });
             logStatus("Visualization complete.");
+
+            // LOG TO LARAVEL
+            await logGeneration('diagram', topic);
         } catch (e) {
             container.innerHTML = '<div class="text-red-500">Render Error. Try clarifying your description.</div>';
         }
@@ -343,7 +572,10 @@ document.getElementById('genDiagBtn').addEventListener('click', async () => {
     }
 });
 
-// --- Utility Functions ---
+// ============================================================
+// UTILITIES
+// ============================================================
+
 function downloadBlob(blob, filename) {
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -356,7 +588,6 @@ function downloadBlob(blob, filename) {
 }
 
 // --- God Mode Secret Activation ---
-// Open console and type: activateGodMode("your_password")
 window.activateGodMode = (pw) => {
     localStorage.setItem('STUDENT_TOOLS_ADMIN', pw);
     console.log("God Mode Activated. Unlimited uses enabled.");
@@ -366,14 +597,14 @@ window.activateGodMode = (pw) => {
 async function checkAdminStatus() {
     try {
         const adminToken = localStorage.getItem('STUDENT_TOOLS_ADMIN');
-        const response = await fetch(`${API_BASE}/health`, {
+        const response = await fetch(`${AI_API}/health`, {
             headers: { 'X-Admin-Token': adminToken || "" }
         });
         const data = await response.json();
         if (data.is_admin) {
             console.log("God Mode Status: ACTIVE 👑");
         } else {
-            console.warn("God Mode Status: INACTIVE 👤 (1 use per day)");
+            console.warn("God Mode Status: INACTIVE 👤");
         }
     } catch (e) { }
 }
