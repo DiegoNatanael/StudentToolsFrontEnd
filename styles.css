@@ -646,6 +646,7 @@ textarea {
     width: 100%;
     max-width: 420px;
     position: relative;
+    padding-top: 48px;
     animation: scaleIn 0.4s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
@@ -656,16 +657,21 @@ textarea {
 
 .close-auth-btn {
     position: absolute;
-    top: 16px;
-    right: 16px;
-    background: transparent;
+    top: 12px;
+    right: 12px;
+    background: rgba(255, 255, 255, 0.05);
     border: none;
     color: var(--text-dim);
-    font-size: 1.1rem;
+    font-size: 1rem;
     cursor: pointer;
-    padding: 8px;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     border-radius: 50%;
     transition: var(--transition);
+    z-index: 10;
 }
 
 .close-auth-btn:hover {
@@ -738,4 +744,16 @@ textarea {
     border-radius: 10px;
     font-size: 0.85rem;
     margin-bottom: 16px;
+}
+
+/* Hide browser password reveal eye */
+.auth-form input[type='password']::-ms-reveal,
+.auth-form input[type='password']::-ms-clear,
+.auth-form input[type='password']::-webkit-credentials-auto-fill-button {
+    display: none;
+}
+
+input::-ms-reveal,
+input::-ms-clear {
+    display: none;
 }
